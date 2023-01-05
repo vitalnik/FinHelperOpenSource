@@ -1,0 +1,221 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+
+    //id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
+    id 'kotlin-parcelize'
+
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+
+    // junit5
+    id 'de.mannodermaus.android-junit5'
+
+    id 'com.gladed.androidgitversion' version '0.4.14'
+}
+
+androidGitVersion {
+    // by default only "master" was hidden
+    hideBranches = [ 'main' ]
+}
+
+android {
+    namespace 'com.aripuca.finhelper'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.aripuca.finhelper"
+        minSdk 23
+        targetSdk 33
+
+        versionName androidGitVersion.name()
+        versionCode androidGitVersion.code()
+
+        vectorDrawables {
+            useSupportLibrary true
+        }
+
+        kapt {
+            arguments {
+                arg("room.schemaLocation", "$projectDir/schemas")
+            }
+        }
+
+        //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.aripuca.finhelper.CustomTestRunner"
+    }
+
+    signingConfigs {
+        debugConfig {
+            storeFile file('debug.keystore')
+            keyAlias 'androiddebugkey'
+            storePassword 'android'
+            keyPassword 'android'
+        }
+        releaseConfig {
+            storeFile file('aripuca-apps-keystores.jks')
+            File propertiesFile = project.rootProject.file('local.properties')
+            Properties properties = new Properties()
+            if (propertiesFile.exists()) {
+                properties.load(propertiesFile.newDataInputStream())
+                keyAlias properties.getProperty('keyAlias')
+                keyPassword properties.getProperty('keyPassword')
+                storePassword properties.getProperty('storePassword')
+            } else {
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+                storePassword System.getenv('STORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+
+        debug {
+            debuggable = true
+            signingConfig signingConfigs.debugConfig
+        }
+
+        release {
+            debuggable = false
+            minifyEnabled true
+            signingConfig signingConfigs.releaseConfig
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flavorDimensions "default"
+    productFlavors {
+        development {
+            applicationIdSuffix '.dev'
+            dimension "default"
+        }
+        production {
+            dimension "default"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion "1.3.2"
+        //kotlinCompilerVersion = "1.2.1"
+    }
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += ["-Xopt-in=kotlin.RequiresOptIn",
+                                       "-Xopt-in=kotlinx.coroutines.FlowPreview",
+                                       "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
+                                       "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+                                       "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+                                       "-Xopt-in=com.google.accompanist.pager.ExperimentalPagerApi"]
+}
+
+dependencies {
+    // compose BOM
+    def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
+    implementation composeBom
+    androidTestImplementation composeBom
+
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.foundation:foundation'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+
+    // --------------------
+    implementation "androidx.core:core-ktx:1.9.0"
+    implementation "androidx.activity:activity-compose:1.6.1"
+    implementation "androidx.compose.compiler:compiler:1.3.2"
+    implementation "androidx.navigation:navigation-compose:2.5.3"
+
+    // lifecycle & view models
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
+    //implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
+    //implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+
+    // Hilt
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+    kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
+    //kapt "com.google.dagger:dagger-android-processor:$hilt_version"
+    androidTestImplementation("com.google.dagger:hilt-android-testing:$hilt_version")
+    kaptAndroidTest("com.google.dagger:hilt-android-compiler:$hilt_version")
+
+    // coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+
+    // secure preferences
+    implementation "androidx.security:security-crypto:1.1.0-alpha04"
+
+    // Play services
+    implementation 'com.google.android.gms:play-services-ads:21.4.0'
+
+    // Google Play's Billing
+    implementation "com.android.billingclient:billing-ktx:5.1.0"
+
+    // Firebase BOM
+    implementation platform('com.google.firebase:firebase-bom:31.1.1')
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+//    implementation 'com.google.firebase:firebase-auth-ktx'
+//    implementation 'com.google.firebase:firebase-config-ktx'
+
+    // Accompanist
+    implementation "com.google.accompanist:accompanist-navigation-animation:$accompanist_version"
+//    implementation "com.google.accompanist:accompanist-insets:$accompanist_version"
+//    implementation "com.google.accompanist:accompanist-coil:0.15.0"
+//    implementation "com.google.accompanist:accompanist-pager:$accompanist_version"
+//    implementation "com.google.accompanist:accompanist-pager-indicators:$accompanist_version"
+//    implementation "com.google.accompanist:accompanist-flowlayout:$accompanist_version"
+//    implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist_version"
+
+    //implementation("com.himanshoe:charty:1.0.1")
+
+    // room
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+
+    // testing
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    // Test rules and transitive dependencies:
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$compose_version")
+    // Needed for createAndroidComposeRule, but not createComposeRule:
+    debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
+
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.1'
+
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
+    testImplementation 'io.mockk:mockk:1.13.3'
+
+
+}

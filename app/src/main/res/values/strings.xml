@@ -1,0 +1,63 @@
+<resources>
+    <string name="app_name">Financial Helper</string>
+    <string name="app_name_short">FinHelper</string>
+    <string name="support_email">finhelper@aripuca.com</string>
+
+    <string name="ver">Ver.</string>
+
+    <string name="vs">vs.</string>
+    <string name="and">and</string>
+
+    <string name="mortgage">Mortgage</string>
+    <string name="investment">Investments</string>
+    <string name="about">About</string>
+
+    <string name="yearly_table">Yearly table</string>
+    <string name="total_value">Total value</string>
+
+    <string name="regular_contribution">Reg. contribution, $</string>
+    <string name="load_previous_history_item">Load previous history item</string>
+    <string name="load_next_history_item">Load next history item</string>
+    <string name="add_history_item">Add history item</string>
+    <string name="save_history_item">Save history item</string>
+    <string name="delete_history_item">Delete history item</string>
+
+    <!-- Mortgage screen -->
+    <string name="mortgage_calculator">Mortgage calculator</string>
+    <string name="mortgage_help">Mortgage payments formula</string>
+    <string name="principal_amount">Principal amount</string>
+    <string name="principal_amount_label">Principal amount, $</string>
+    <string name="number_of_years">Amortization, years</string>
+    <string name="payments_per_year">Payments per year</string>
+    <string name="payments_schedule">Payments schedule</string>
+    <string name="principal">Principal</string>
+    <string name="interest">Interest</string>
+    <string name="remainder">Remainder</string>
+    <string name="payment_amount">Payment amount</string>
+    <string name="total_payments">Total payments</string>
+
+    <!-- Investment screen -->
+    <string name="investment_calculator">Investment calculator</string>
+    <string name="investment_help">Compound interest formulas</string>
+    <string name="initial_investment">Initial investment, $</string>
+
+    <string name="contribution_and_compounding_frequency">Contribution and compounding frequency</string>
+
+    <string name="total_investment">Total investment</string>
+    <string name="yearly_interest">Yearly interest</string>
+
+    <string name="yearly_investment">Yearly investment</string>
+
+    <!-- Common -->
+    <string name="interest_rate">Interest rate, %</string>
+    <string name="total_interest">Total interest</string>
+    <string name="weekly_option">Weekly (52 times a year)</string>
+    <string name="monthly_option">Monthly (12 times a year)</string>
+    <string name="quarterly_option">Quarterly (4 times a year)</string>
+    <string name="annually_option">Annually (once a year)</string>
+    <string name="weekly_option2">Weekly</string>
+    <string name="monthly_option2">Monthly</string>
+    <string name="quarterly_option2">Quarterly</string>
+    <string name="annually_option2">Annually</string>
+
+</resources>

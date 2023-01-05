@@ -1,0 +1,10 @@
+<resources>
+    <!-- Test AdMob ad unit ids -->
+    <string name="mortgage_screen_banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="investment_screen_banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="my1st_million_screen_banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+
+    <string name="mortgage_help_screen_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="investment_help_screen_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="my1st_million_screen_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
+</resources>
