@@ -1,6 +1,7 @@
 package com.aripuca.finhelper.calculations
 
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.pow
 
 data class ScheduleItem(
@@ -18,20 +19,14 @@ class MortgageCalculator(
 
     var totalInterest: Double = 0.0
     var totalPayments: Double = 0.0
+    var paymentPerPeriod: Double = 0.0
+    var principalPercent: Double = 0.0
     var paymentsSchedule: MutableList<ScheduleItem> = mutableListOf()
     var yearSummary: MutableList<ScheduleItem> = mutableListOf()
 
-    fun calculatePaymentPerPeriod(): Double {
+    private fun calculatePaymentPerPeriod(): Double {
         val periodInterestRate = interestRate / 100 / paymentsPerYear
         val numberOfPayments = paymentsPerYear * numberOfYears
-
-        if (listOf(
-                paymentsPerYear, interestRate,
-                numberOfYears, loanAmount
-            ).any { it == 0.0 }
-        ) {
-            return 0.0
-        }
 
         val result = loanAmount *
                 (periodInterestRate * (1 + periodInterestRate).pow(numberOfPayments)) /
@@ -40,20 +35,26 @@ class MortgageCalculator(
         if (result.isNaN()) {
             return 0.0
         }
+
         return result
     }
 
-    fun calculatePaymentsSchedule() {
+    fun calculate() {
 
-        val paymentPerPeriod = calculatePaymentPerPeriod()
+        if (loanAmount == 0.0 || interestRate == 0.0 || numberOfYears == 0 || paymentsPerYear == 0) {
+            paymentPerPeriod = 0.0
+            totalPayments = 0.0
+            totalInterest = 0.0
+            paymentsSchedule.clear()
+            yearSummary.clear()
+            return
+        }
+
+        paymentPerPeriod = calculatePaymentPerPeriod()
 
         val periodInterestRate = interestRate / 100 / paymentsPerYear
         var loanRemainder = loanAmount
         val numberOfPayments = paymentsPerYear * numberOfYears
-
-        totalInterest = 0.0
-        totalPayments = 0.0
-        paymentsSchedule.clear()
 
         var yearInterest = 0.0
         var yearPrincipal = 0.0
@@ -88,5 +89,12 @@ class MortgageCalculator(
         }
 
         totalPayments = loanAmount + totalInterest
+
+        principalPercent = if (totalPayments > 0) {
+            loanAmount * 100.0 / totalPayments
+        } else {
+            0.0
+        }
+
     }
 }

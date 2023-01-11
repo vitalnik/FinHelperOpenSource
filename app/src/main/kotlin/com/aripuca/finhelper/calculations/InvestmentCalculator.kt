@@ -16,12 +16,13 @@ class InvestmentCalculator(
     private val regularAdditionFrequency: Double,
     private val interestRate: Double,
     private val numberOfTimesInterestApplied: Double,
-    private val yearsToGrow: Double,
+    private val yearsToGrow: Int,
 ) {
 
     var totalValue: Double = 0.0
     var totalInterestEarned: Double = 0.0
     var totalInvestment: Double = 0.0
+    var principalPercent: Double = 0.0
 
     var yearlyTable: MutableList<YearlyTableItem> = mutableListOf()
 
@@ -31,6 +32,7 @@ class InvestmentCalculator(
             totalValue = initialPrincipalBalance
             totalInvestment = initialPrincipalBalance
             totalInterestEarned = 0.0
+            yearlyTable.clear()
             return
         }
 
@@ -61,12 +63,18 @@ class InvestmentCalculator(
             totalInterestEarned = totalValue - initialPrincipalBalance
         }
 
+        principalPercent = if (totalValue > 0) {
+            totalInvestment * 100.0 / totalValue
+        } else {
+            0.0
+        }
+
         populateYearlyTable()
     }
 
     private fun populateYearlyTable() {
 
-        var nt = numberOfTimesInterestApplied
+        val nt = numberOfTimesInterestApplied
         val rn = interestRate / 100 / numberOfTimesInterestApplied
 
         var principalBalance = initialPrincipalBalance
@@ -74,11 +82,11 @@ class InvestmentCalculator(
         var totalInvestment = initialPrincipalBalance + regularAddition * regularAdditionFrequency
         var yearlyInvestment = initialPrincipalBalance + regularAddition * regularAdditionFrequency
 
-        var yearlyInterest:Double
+        var yearlyInterest: Double
         var totalInterest = 0.0
         var totalValue: Double
 
-        repeat(yearsToGrow.toInt()) { year ->
+        repeat(yearsToGrow) { year ->
 
             totalValue =
                 principalBalance * (1 + rn).pow(nt) + regularAddition * ((1 + rn).pow(nt) - 1) / rn

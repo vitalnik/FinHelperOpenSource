@@ -109,7 +109,7 @@ class BillingManager @Inject constructor(
                     analyticsClient.log(
                         FirebaseAnalyticsClient.BILLING_SERVICE_CONNECTED
                     )
-                    launch {
+                    launch(context = Dispatchers.IO) {
                         queryPurchases()
                         queryProductDetails()
                     }

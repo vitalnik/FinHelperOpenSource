@@ -1,6 +1,8 @@
 package com.aripuca.finhelper.ui.screens.mortgage
 
 import android.annotation.SuppressLint
+import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -46,6 +48,7 @@ import com.himanshoe.charty.common.axis.AxisConfigDefaults
 @Composable
 fun MortgageScreen(
     adsRemoved: Boolean,
+    inputValid: Boolean,
     payment: String,
     totalInterest: String,
     totalPayments: String,
@@ -69,25 +72,20 @@ fun MortgageScreen(
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
-                title = {
-                    TopAppBarRow(
-                        title = stringResource(id = R.string.mortgage_calculator),
-                        helpContentDescription = stringResource(id = R.string.mortgage_help),
-                        onHelpClick = onHelpClick
-                    )
-                },
-                navigationIcon = {
-                    NavigationIcon {
-                        onBackPress()
-                    }
-                },
-                scrollBehavior = scrollBehavior
+    Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
+        TopAppBar(title = {
+            TopAppBarRow(
+                title = stringResource(id = R.string.mortgage_calculator),
+                helpContentDescription = stringResource(id = R.string.mortgage_help),
+                onHelpClick = onHelpClick
             )
-        }) { scaffoldPadding ->
+        }, navigationIcon = {
+            NavigationIcon {
+                onBackPress()
+            }
+        }, scrollBehavior = scrollBehavior
+        )
+    }) { scaffoldPadding ->
 
         Column(
             modifier = Modifier
@@ -125,7 +123,9 @@ fun MortgageScreen(
                 }
 
                 item {
-                    if (yearSummary.isNotEmpty() && yearSummary[0].principalPart != 0.0) {
+                    AnimatedVisibility(
+                        visible = inputValid
+                    ) {
                         MortgageChart(yearSummary)
                     }
                 }
@@ -139,68 +139,67 @@ fun MortgageScreen(
                     ) {
 
                         CalculatedFields(
-                            principalPercent,
-                            payment,
-                            principalAmount,
-                            totalInterest,
-                            totalPayments
+                            principalPercent, payment, principalAmount, totalInterest, totalPayments
                         )
 
-                        if (paymentsSchedule.isNotEmpty()) {
+                        if (inputValid) {
                             HeaderText(text = stringResource(R.string.payments_schedule))
                             PaymentsScheduleHeader()
                         }
                     }
                 }
 
-                itemsIndexed(items = paymentsSchedule) { index, item ->
+                if (inputValid) {
+                    itemsIndexed(items = paymentsSchedule, key = { index, _ ->
+                        index
+                    }) { index, item ->
 
-                    val yearIndex = (index / paymentsPerYear.toInt())
+                        val yearIndex = (index / paymentsPerYear.toInt())
 
-                    PaymentsScheduleRow(
-                        index = index,
-                        item = item,
-                    )
+                        PaymentsScheduleRow(
+                            index = index,
+                            item = item,
+                        )
 
-                    if ((index + 1) % (paymentsPerYear.toIntOrNull() ?: 1) == 0) {
-                        Row(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .background(
-                                    color = if (isSystemInDarkTheme()) Color.LightGray.copy(
-                                        alpha = 0.1f
-                                    ) else Color.LightGray.copy(alpha = 0.25f)
+                        if ((index + 1) % (paymentsPerYear.toIntOrNull() ?: 1) == 0) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .background(
+                                        color = if (isSystemInDarkTheme()) Color.LightGray.copy(
+                                            alpha = 0.1f
+                                        ) else Color.LightGray.copy(alpha = 0.25f)
+                                    )
+                                    .padding(horizontal = 4.dp, vertical = 4.dp)
+                            ) {
+                                TableCell(
+                                    text = "Y${yearIndex + 1}",
+                                    weight = 1f,
+                                    color = if (isSystemInDarkTheme()) progressOutlineDark else progressOutlineLight,
+                                    style = TextStyle(fontWeight = FontWeight.Bold)
                                 )
-                                .padding(horizontal = 4.dp, vertical = 4.dp)
-                        ) {
-                            TableCell(
-                                text = "Y${yearIndex + 1}",
-                                weight = 1f,
-                                color = if (isSystemInDarkTheme()) progressOutlineDark else progressOutlineLight,
-                                style = TextStyle(fontWeight = FontWeight.Bold)
-                            )
-                            HorizontalSpacer(8.dp)
-                            TableCell(
-                                text = yearSummary[yearIndex].principalPart.toCurrency(),
-                                color = if (isSystemInDarkTheme()) progress1Dark else progress1Light,
-                                style = TextStyle(fontWeight = FontWeight.Bold)
-                            )
-                            HorizontalSpacer(8.dp)
-                            TableCell(
-                                text = yearSummary[yearIndex].interestPart.toCurrency(),
-                                style = TextStyle(fontWeight = FontWeight.Bold),
-                                color = if (isSystemInDarkTheme()) interestDark else interestLight,
-                            )
-                            HorizontalSpacer(8.dp)
-                            TableCell(
-                                text = yearSummary[yearIndex].loanRemainder.toCurrency(),
-                                color = if (isSystemInDarkTheme()) progressOutlineDark else progressOutlineLight,
-                                style = TextStyle(fontWeight = FontWeight.Bold)
-                            )
+                                HorizontalSpacer(8.dp)
+                                TableCell(
+                                    text = yearSummary[yearIndex].principalPart.toCurrency(),
+                                    color = if (isSystemInDarkTheme()) progress1Dark else progress1Light,
+                                    style = TextStyle(fontWeight = FontWeight.Bold)
+                                )
+                                HorizontalSpacer(8.dp)
+                                TableCell(
+                                    text = yearSummary[yearIndex].interestPart.toCurrency(),
+                                    style = TextStyle(fontWeight = FontWeight.Bold),
+                                    color = if (isSystemInDarkTheme()) interestDark else interestLight,
+                                )
+                                HorizontalSpacer(8.dp)
+                                TableCell(
+                                    text = yearSummary[yearIndex].loanRemainder.toCurrency(),
+                                    color = if (isSystemInDarkTheme()) progressOutlineDark else progressOutlineLight,
+                                    style = TextStyle(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                            Divider(modifier = Modifier.padding(horizontal = 16.dp))
                         }
-                        Divider(modifier = Modifier.padding(horizontal = 16.dp))
                     }
-
                 }
 
                 item {
@@ -228,51 +227,54 @@ private fun MortgageChart(yearSummary: List<ScheduleItem>) {
         stackBarData.add(StackedBarData(xValue = index + 1, yValue = yValue))
     }
 
-    VerticalSpacer(8.dp)
+    Column {
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("chart_title"),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.principal),
-            modifier = Modifier,
-            color = if (isSystemInDarkTheme()) principalDark else principalLight,
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-        )
-        Text(
-            text = stringResource(R.string.vs),
-            modifier = Modifier.padding(horizontal = 8.dp),
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-        )
-        Text(
-            text = stringResource(R.string.interest),
-            modifier = Modifier,
-            color = if (isSystemInDarkTheme()) interestDark else interestLight,
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-        )
-    }
+        VerticalSpacer(8.dp)
 
-    VerticalSpacer(8.dp)
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        StackedBarChart(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
-            colors = listOf(
-                if (isSystemInDarkTheme()) principalDark else principalLight,
-                if (isSystemInDarkTheme()) interestDark else interestLight,
-            ),
-            stackBarData = stackBarData,
-            axisConfig = AxisConfigDefaults.axisConfigDefaults2(
-                isSystemInDarkTheme()
-            ),
-            barConfig = BarConfigDefaults.barConfigDimesDefaults(),
-        )
+                .testTag("chart_title"),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = stringResource(R.string.principal),
+                modifier = Modifier,
+                color = if (isSystemInDarkTheme()) principalDark else principalLight,
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+            Text(
+                text = stringResource(R.string.vs),
+                modifier = Modifier.padding(horizontal = 8.dp),
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+            Text(
+                text = stringResource(R.string.interest),
+                modifier = Modifier,
+                color = if (isSystemInDarkTheme()) interestDark else interestLight,
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+        }
+
+        VerticalSpacer(8.dp)
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            StackedBarChart(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+                colors = listOf(
+                    if (isSystemInDarkTheme()) principalDark else principalLight,
+                    if (isSystemInDarkTheme()) interestDark else interestLight,
+                ),
+                stackBarData = stackBarData,
+                axisConfig = AxisConfigDefaults.axisConfigDefaults2(
+                    isSystemInDarkTheme()
+                ),
+                barConfig = BarConfigDefaults.barConfigDimesDefaults(),
+            )
+        }
     }
 }
 
@@ -315,7 +317,7 @@ private fun InputFields(
             .padding(horizontal = 16.dp)
     ) {
         TextFieldRow(
-            label = stringResource(R.string.number_of_years),
+            label = stringResource(R.string.amortization_years),
             value = numberOfYears,
             onValueChanged = onNumberOfYearsChanged,
             testTag = "number_of_years_input",
@@ -444,6 +446,7 @@ fun HomeScreenPreview() {
     FinHelperTheme {
         MortgageScreen(
             adsRemoved = false,
+            inputValid = true,
             payment = "$500.00",
             totalInterest = "$1000.00",
             totalPayments = "$100000.00",

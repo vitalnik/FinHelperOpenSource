@@ -31,6 +31,9 @@ fun NavGraphBuilder.aboutScreen(
         Log.d("TAG", ">>> About screen")
 
         val viewModel = hiltViewModel<AboutViewModel>()
+        //  val homeViewModel =
+        //     hiltViewModel<HomeViewModel>(remember { nav.getBackStackEntry(route = MAIN_GRAPH) })
+
 
         val context = LocalContext.current
         val versionName = stringResource(id = R.string.ver) + " " + context.getVersionName()

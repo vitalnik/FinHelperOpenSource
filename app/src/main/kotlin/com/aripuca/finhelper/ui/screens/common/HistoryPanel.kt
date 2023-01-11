@@ -136,7 +136,7 @@ fun HistoryPanel(
                 painter = painterResource(
                     id = R.drawable.ic_delete,
                 ),
-                contentDescription = stringResource(R.string.save_history_item),
+                contentDescription = stringResource(R.string.delete_history_item),
                 modifier = Modifier
                     .padding(8.dp)
             )

@@ -37,6 +37,8 @@ fun NavGraphBuilder.mortgageScreen(
         val numberOfYearsInput by viewModel.numberOfYearsInput
         val paymentsPerYearInput by viewModel.paymentsPerYearInput
 
+        val inputValid by viewModel.inputValid
+
         // history
         val selectedHistoryItemIndex by viewModel.selectedHistoryItemIndex
         val saveHistoryItemEnabled by viewModel.saveHistoryItemEnabled
@@ -66,6 +68,7 @@ fun NavGraphBuilder.mortgageScreen(
 
         MortgageScreen(
             adsRemoved = adsRemoved,
+            inputValid = inputValid,
             payment = payment,
             totalInterest = totalInterest,
             totalPayments = totalPayments,

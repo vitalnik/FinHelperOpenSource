@@ -71,6 +71,8 @@ class InvestmentViewModel @Inject constructor(
     val initialInvestmentInput = mutableStateOf(localStorage.getInvestmentInitialBalance("5000"))
     val interestRateInput = mutableStateOf(localStorage.getInvestmentInterestRate("7"))
 
+    val inputValid = mutableStateOf(false)
+
     // number of time periods elapsed
     val yearsToGrowInput = mutableStateOf(localStorage.getInvestmentYearsToGrow("10"))
     val regularContributionInput = mutableStateOf(localStorage.getInvestmentRegularAddition("100"))
@@ -94,6 +96,12 @@ class InvestmentViewModel @Inject constructor(
 
     fun calculateInvestment() {
 
+        validateRequiredFields()
+
+        if (!inputValid.value) {
+            return
+        }
+
         viewModelScope.launch {
 
             val investmentCalculator = InvestmentCalculator(
@@ -102,7 +110,7 @@ class InvestmentViewModel @Inject constructor(
                 regularAdditionFrequency = regularAdditionFrequencyInput.value.toDouble(),
                 interestRate = interestRateInput.value.toDoubleOrNull() ?: 0.0,
                 numberOfTimesInterestApplied = regularAdditionFrequencyInput.value.toDouble(),
-                yearsToGrow = yearsToGrowInput.value.toDoubleOrNull() ?: 0.0,
+                yearsToGrow = yearsToGrowInput.value.toIntOrNull() ?: 0,
             )
 
             investmentCalculator.calculate()
@@ -113,8 +121,7 @@ class InvestmentViewModel @Inject constructor(
 
             yearlyTable.value = investmentCalculator.yearlyTable
 
-            principalPercent.value =
-                investmentCalculator.totalInvestment * 100.0 / investmentCalculator.totalValue
+            principalPercent.value = investmentCalculator.principalPercent
 
             saveUserInputInLocalStorage()
         }
@@ -279,6 +286,11 @@ class InvestmentViewModel @Inject constructor(
     }
 
     fun updateInitialInvestment(value: String) {
+        if (value.isEmpty()) {
+            inputValid.value = false
+            initialInvestmentInput.value = value
+            return
+        }
         if (validateInitialInvestment(value)) {
             initialInvestmentInput.value = value
             setSaveHistoryItemEnabled()
@@ -287,6 +299,11 @@ class InvestmentViewModel @Inject constructor(
     }
 
     fun updateInterestRate(value: String) {
+        if (value.isEmpty() || (value.toDoubleOrNull() ?: 0.0) == 0.0) {
+            inputValid.value = false
+            interestRateInput.value = value
+            return
+        }
         if (validateInterestRate(value)) {
             interestRateInput.value = value
             setSaveHistoryItemEnabled()
@@ -295,6 +312,11 @@ class InvestmentViewModel @Inject constructor(
     }
 
     fun updateRegularContribution(value: String) {
+        if (value.isEmpty()) {
+            inputValid.value = false
+            regularContributionInput.value = value
+            return
+        }
         if (validateRegularContribution(value)) {
             regularContributionInput.value = value
             setSaveHistoryItemEnabled()
@@ -303,6 +325,11 @@ class InvestmentViewModel @Inject constructor(
     }
 
     fun updateYearsToGrow(value: String) {
+        if (value.isEmpty() || (value.toIntOrNull() ?: 0) == 0) {
+            inputValid.value = false
+            yearsToGrowInput.value = ""
+            return
+        }
         if (validateYearsToGrow(value)) {
             yearsToGrowInput.value = value
             setSaveHistoryItemEnabled()
@@ -334,6 +361,16 @@ class InvestmentViewModel @Inject constructor(
             }
         }
 
+    }
+
+    private fun validateRequiredFields() {
+        inputValid.value =
+            !(initialInvestmentInput.value.isEmpty() ||
+                    interestRateInput.value.isEmpty() ||
+                    (interestRateInput.value.toDoubleOrNull() ?: 0.0) == 0.0 ||
+                    regularContributionInput.value.isEmpty()
+                    ) && !((initialInvestmentInput.value.toDoubleOrNull() ?: 0.0) == 0.0 &&
+                    (regularContributionInput.value.toDoubleOrNull() ?: 0.0) == 0.0)
     }
 
 }

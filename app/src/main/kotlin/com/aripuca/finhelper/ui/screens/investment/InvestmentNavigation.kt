@@ -40,6 +40,8 @@ fun NavGraphBuilder.investmentScreen(
         val regularAddition by viewModel.regularContributionInput
         val regularAdditionFrequency by viewModel.regularAdditionFrequencyInput
 
+        val inputValid by viewModel.inputValid
+
         // history
         val selectedHistoryItemIndex by viewModel.selectedHistoryItemIndex
         val saveHistoryItemEnabled by viewModel.saveHistoryItemEnabled
@@ -87,6 +89,7 @@ fun NavGraphBuilder.investmentScreen(
 
         InvestmentScreen(
             adsRemoved = adsRemoved,
+            inputValid = inputValid,
             totalValue = totalValue,
             totalInterestEarned = totalInterestEarned,
             totalInvestment = totalInvestment,

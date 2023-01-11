@@ -1,5 +1,6 @@
 package com.aripuca.finhelper.ui.screens.mortgage
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,7 +18,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
-import kotlin.math.ceil
 
 @HiltViewModel
 class MortgageViewModel @Inject constructor(
@@ -29,6 +29,7 @@ class MortgageViewModel @Inject constructor(
     val mortgageHistoryFlow = appDatabase.mortgageHistoryDao().getAllAsFlow()
     val selectedHistoryItemIndex = mutableStateOf(localStorage.getMortgageHistorySelectedIndex(0))
     val saveHistoryItemEnabled = mutableStateOf(false)
+    val inputValid = mutableStateOf(false)
 
     val paymentState = mutableStateOf("")
     val totalInterestState = mutableStateOf("")
@@ -69,7 +70,16 @@ class MortgageViewModel @Inject constructor(
     }
 
     fun calculateSchedule() {
+
+        validateRequiredFields()
+
+        if (!inputValid.value) {
+            Log.d("TAG", ">>> Invalid input")
+            return
+        }
+
         viewModelScope.launch {
+
             val mortgageCalculator = MortgageCalculator(
                 loanAmount = principalAmountInput.value.toDoubleOrNull() ?: 0.0,
                 interestRate = interestRateInput.value.toDoubleOrNull() ?: 0.0,
@@ -77,22 +87,19 @@ class MortgageViewModel @Inject constructor(
                 paymentsPerYear = paymentsPerYearInput.value.toIntOrNull() ?: 0,
             )
 
-            mortgageCalculator.calculatePaymentsSchedule()
+            mortgageCalculator.calculate()
 
-            val payment = mortgageCalculator.calculatePaymentPerPeriod()
-            paymentState.value = payment.toCurrency()
+            paymentState.value = mortgageCalculator.paymentPerPeriod.toCurrency()
 
-            paymentsSchedule.value = mortgageCalculator.paymentsSchedule
-            yearSummary.value = mortgageCalculator.yearSummary
             totalInterestState.value = mortgageCalculator.totalInterest.toCurrency()
             totalPaymentsState.value = mortgageCalculator.totalPayments.toCurrency()
             principalAmountState.value =
                 (principalAmountInput.value.toDoubleOrNull() ?: 0.0).toCurrency()
-            principalPercent.value =
-                ceil(
-                    (principalAmountInput.value.toDoubleOrNull()
-                        ?: 0.0) * 100.0 / mortgageCalculator.totalPayments
-                )
+            principalPercent.value = mortgageCalculator.principalPercent
+
+            paymentsSchedule.value = mortgageCalculator.paymentsSchedule
+            yearSummary.value = mortgageCalculator.yearSummary
+
             saveUserInputInLocalStorage()
         }
     }
@@ -108,7 +115,10 @@ class MortgageViewModel @Inject constructor(
             numberOfYearsInput.value
         )
         localStorage.saveString(LocalStorage.MORTGAGE_PAYMENTS_PER_YEAR, paymentsPerYearInput.value)
-        localStorage.saveInt(LocalStorage.MORTGAGE_HISTORY_SELECTED_INDEX, selectedHistoryItemIndex.value)
+        localStorage.saveInt(
+            LocalStorage.MORTGAGE_HISTORY_SELECTED_INDEX,
+            selectedHistoryItemIndex.value
+        )
     }
 
     fun addHistoryItem() {
@@ -228,6 +238,11 @@ class MortgageViewModel @Inject constructor(
     }
 
     fun updatePrincipalAmount(value: String) {
+        if (value.isEmpty() || (value.toDoubleOrNull() ?: 0.0) == 0.0) {
+            inputValid.value = false
+            principalAmountInput.value = value
+            return
+        }
         if (validatePrincipalAmount(value)) {
             principalAmountInput.value = value
             setSaveHistoryItemEnabled()
@@ -236,6 +251,11 @@ class MortgageViewModel @Inject constructor(
     }
 
     fun updateInterestRate(value: String) {
+        if (value.isEmpty() || (value.toDoubleOrNull() ?: 0.0) == 0.0) {
+            inputValid.value = false
+            interestRateInput.value = value
+            return
+        }
         if (validateInterestRate(value)) {
             interestRateInput.value = value
             setSaveHistoryItemEnabled()
@@ -244,6 +264,11 @@ class MortgageViewModel @Inject constructor(
     }
 
     fun updateNumberOfYears(value: String) {
+        if (value.isEmpty() || (value.toIntOrNull() ?: 0) == 0) {
+            inputValid.value = false
+            numberOfYearsInput.value = ""
+            return
+        }
         if (validateNumberOfYears(value)) {
             numberOfYearsInput.value = value
             setSaveHistoryItemEnabled()
@@ -252,6 +277,11 @@ class MortgageViewModel @Inject constructor(
     }
 
     fun updatePaymentsPerYear(value: String) {
+        if (value.isEmpty() || (value.toIntOrNull() ?: 0) == 0) {
+            inputValid.value = false
+            paymentsPerYearInput.value = ""
+            return
+        }
         if (validatePaymentsPerYear(value)) {
             paymentsPerYearInput.value = value
             setSaveHistoryItemEnabled()
@@ -275,5 +305,18 @@ class MortgageViewModel @Inject constructor(
             }
         }
 
+    }
+
+    fun validateRequiredFields() {
+        inputValid.value =
+            !(principalAmountInput.value.isEmpty() || (principalAmountInput.value.toDoubleOrNull()
+                ?: 0.0) == 0.0 ||
+                    interestRateInput.value.isEmpty() || (interestRateInput.value.toDoubleOrNull()
+                ?: 0.0) == 0.0 ||
+                    numberOfYearsInput.value.isEmpty() || (numberOfYearsInput.value.toDoubleOrNull()
+                ?: 0.0) == 0.0 ||
+                    paymentsPerYearInput.value.isEmpty() || (paymentsPerYearInput.value.toDoubleOrNull()
+                ?: 0.0) == 0.0
+                    )
     }
 }

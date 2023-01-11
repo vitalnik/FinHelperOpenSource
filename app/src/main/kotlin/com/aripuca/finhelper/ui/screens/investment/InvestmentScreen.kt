@@ -1,6 +1,7 @@
 package com.aripuca.finhelper.ui.screens.investment
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,6 +49,7 @@ import com.himanshoe.charty.common.axis.AxisConfigDefaults
 @Composable
 fun InvestmentScreen(
     adsRemoved: Boolean,
+    inputValid: Boolean,
     totalValue: String,
     totalInterestEarned: String,
     totalInvestment: String,
@@ -129,7 +131,7 @@ fun InvestmentScreen(
                 }
 
                 item {
-                    if (yearlyTable.isNotEmpty()) {
+                    AnimatedVisibility(visible = inputValid) {
                         InvestmentChart(yearlyTable)
                     }
                 }
@@ -141,7 +143,7 @@ fun InvestmentScreen(
                         totalValue,
                         principalPercent
                     )
-                    if (yearlyTable.isNotEmpty()) {
+                    if (inputValid) {
                         Surface {
                             Column {
                                 Row(
@@ -156,27 +158,29 @@ fun InvestmentScreen(
                     }
                 }
 
-                itemsIndexed(items = yearlyTable) { index, item ->
+                if (inputValid) {
+                    itemsIndexed(items = yearlyTable) { index, item ->
 
-                    var backgroundColor = Color.Transparent
-                    if ((index + 1) % 2 == 0) {
-                        backgroundColor = if (isSystemInDarkTheme()) Color.LightGray.copy(
-                            alpha = 0.1f
-                        ) else Color.LightGray.copy(alpha = 0.25f)
-                    }
-                    Row(
-                        modifier = Modifier
-                            .horizontalScroll(horScrollState)
-                            .padding(horizontal = 16.dp)
-                            .background(color = backgroundColor)
-                            .padding(vertical = 4.dp)
-                    ) {
-                        TableCellFixed(text = (index + 1).toString(), width = 50.dp)
-                        TableCellFixed(text = item.yearlyInvestment.toCurrency())
-                        TableCellFixed(text = item.totalInvestment.toCurrency())
-                        TableCellFixed(text = item.yearlyInterest.toCurrency())
-                        TableCellFixed(text = item.totalInterest.toCurrency())
-                        TableCellFixed(text = item.totalValue.toCurrency())
+                        var backgroundColor = Color.Transparent
+                        if ((index + 1) % 2 == 0) {
+                            backgroundColor = if (isSystemInDarkTheme()) Color.LightGray.copy(
+                                alpha = 0.1f
+                            ) else Color.LightGray.copy(alpha = 0.25f)
+                        }
+                        Row(
+                            modifier = Modifier
+                                .horizontalScroll(horScrollState)
+                                .padding(horizontal = 16.dp)
+                                .background(color = backgroundColor)
+                                .padding(vertical = 4.dp)
+                        ) {
+                            TableCellFixed(text = (index + 1).toString(), width = 50.dp)
+                            TableCellFixed(text = item.yearlyInvestment.toCurrency())
+                            TableCellFixed(text = item.totalInvestment.toCurrency())
+                            TableCellFixed(text = item.yearlyInterest.toCurrency())
+                            TableCellFixed(text = item.totalInterest.toCurrency())
+                            TableCellFixed(text = item.totalValue.toCurrency())
+                        }
                     }
                 }
             }
@@ -201,49 +205,55 @@ private fun InvestmentChart(yearlyTable: List<YearlyTableItem>) {
         stackBarData.add(StackedBarData(xValue = index + 1, yValue = yValue))
     }
 
-    VerticalSpacer()
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(id = R.string.investment),
-            modifier = Modifier,
-            color = if (isSystemInDarkTheme()) principalDark else principalLight,
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-        )
-        Text(
-            text = stringResource(id = R.string.and),
-            modifier = Modifier.padding(horizontal = 8.dp),
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-        )
-        Text(
-            text = stringResource(id = R.string.interest),
-            modifier = Modifier,
-            color = if (isSystemInDarkTheme()) interestDark else interestLight,
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-        )
+    if (stackBarData.isEmpty()) {
+        return
     }
 
-    VerticalSpacer(8.dp)
+    Column {
 
-    StackedBarChart(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
-        colors = listOf(
-            if (isSystemInDarkTheme()) principalDark else principalLight,
-            if (isSystemInDarkTheme()) interestDark else interestLight,
-        ),
-        stackBarData = stackBarData,
-        axisConfig = AxisConfigDefaults.axisConfigDefaults2(
-            isSystemInDarkTheme()
-        ),
-        barConfig = BarConfigDefaults.barConfigDimesDefaults(),
-    )
+        VerticalSpacer()
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = stringResource(id = R.string.investment),
+                modifier = Modifier,
+                color = if (isSystemInDarkTheme()) principalDark else principalLight,
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+            Text(
+                text = stringResource(id = R.string.and),
+                modifier = Modifier.padding(horizontal = 8.dp),
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+            Text(
+                text = stringResource(id = R.string.interest),
+                modifier = Modifier,
+                color = if (isSystemInDarkTheme()) interestDark else interestLight,
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+        }
+
+        VerticalSpacer(8.dp)
+
+        StackedBarChart(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+            colors = listOf(
+                if (isSystemInDarkTheme()) principalDark else principalLight,
+                if (isSystemInDarkTheme()) interestDark else interestLight,
+            ),
+            stackBarData = stackBarData,
+            axisConfig = AxisConfigDefaults.axisConfigDefaults2(
+                isSystemInDarkTheme()
+            ),
+            barConfig = BarConfigDefaults.barConfigDimesDefaults(),
+        )
+    }
 }
 
 @Composable
@@ -427,6 +437,7 @@ fun HomeScreenPreview() {
     FinHelperTheme {
         InvestmentScreen(
             adsRemoved = false,
+            inputValid = true,
             totalValue = "",
             totalInterestEarned = "",
             totalInvestment = "",
