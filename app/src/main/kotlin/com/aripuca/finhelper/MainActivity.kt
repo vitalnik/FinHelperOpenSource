@@ -1,5 +1,7 @@
 package com.aripuca.finhelper
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -18,6 +20,7 @@ import com.aripuca.finhelper.ui.screens.investment.help.investmentHelpScreen
 import com.aripuca.finhelper.ui.screens.investment.investmentScreen
 import com.aripuca.finhelper.ui.screens.mortgage.help.mortgageHelpScreen
 import com.aripuca.finhelper.ui.screens.mortgage.mortgageScreen
+import com.aripuca.finhelper.ui.screens.my1stmillion.my1stMillionScreen
 import com.aripuca.finhelper.ui.theme.FinHelperTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -28,8 +31,7 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import dagger.hilt.android.AndroidEntryPoint
-import com.aripuca.finhelper.ui.screens.my1stmillion.my1stMillionScreen
-import kotlinx.coroutines.flow.MutableStateFlow
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -91,6 +93,7 @@ class MainActivity : ComponentActivity() {
                                             body = ""
                                         )
                                     },
+                                    launchWeb = this@MainActivity::launchWeb,
                                     launchPurchaseFlow = {
                                         val productDetailsParamsList = listOf(
                                             BillingFlowParams.ProductDetailsParams.newBuilder()
@@ -229,6 +232,12 @@ class MainActivity : ComponentActivity() {
         } else {
             nav.navigate(route)
         }
+    }
+
+    private fun launchWeb(url: String) {
+        startActivity(Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse(url)
+        })
     }
 }
 

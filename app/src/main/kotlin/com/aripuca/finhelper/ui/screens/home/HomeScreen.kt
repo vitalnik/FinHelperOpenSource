@@ -25,72 +25,78 @@ fun HomeScreen(
     navigateToAbout: () -> Unit = {},
 ) {
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-//            .background(
-//                brush = Brush.verticalGradient(
-//                    listOf(
-//                        Color.DarkGray,
-//                        Color.Black,
-//                    )
-//                )
-//            )
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Box(contentAlignment = Alignment.BottomCenter) {
 
-        Column(
-            modifier = Modifier.weight(3f, true),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(
-                    id = R.drawable.logo
-                ),
-                contentScale = ContentScale.FillWidth,
-                contentDescription = stringResource(id = R.string.app_name),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-            )
-            TextLink(text = versionName, testTag = "version_link") {
-                navigateToAbout()
-            }
-
-        }
+        Image(
+            painter = painterResource(id = R.drawable.home_bg),
+            contentDescription = stringResource(id = R.string.app_name),
+            contentScale = ContentScale.FillWidth,
+        )
 
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(4f, true),
+                .fillMaxSize()
+                .padding(16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            IconButton(text = stringResource(R.string.mortgage), iconId = R.drawable.ic_house) {
-                navigateToMortgage()
-            }
-
-            VerticalSpacer(24.dp)
-
-            IconButton(text = stringResource(R.string.investment), iconId = R.drawable.ic_savings) {
-                navigateToInvestment()
-            }
-
-            VerticalSpacer(24.dp)
-
-            IconButton(
-                text = "My 1st Million",
-                //textColor = if (isSystemInDarkTheme()) goldDark else goldLight,
-                iconId = R.drawable.ic_diamond
+            Column(
+                modifier = Modifier.weight(3f, true),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                navigateToMy1stMillion()
+                Image(
+                    painter = painterResource(
+                        id = R.drawable.logo
+                    ),
+                    contentScale = ContentScale.FillWidth,
+                    contentDescription = stringResource(id = R.string.app_name),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                )
+                TextLink(text = versionName, testTag = "version_link") {
+                    navigateToAbout()
+                }
+
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(4f, true),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                IconButton(text = stringResource(R.string.mortgage), iconId = R.drawable.ic_house) {
+                    navigateToMortgage()
+                }
+
+                VerticalSpacer(24.dp)
+
+                IconButton(
+                    text = stringResource(R.string.investment),
+                    iconId = R.drawable.ic_savings
+                ) {
+                    navigateToInvestment()
+                }
+
+                VerticalSpacer(24.dp)
+
+                IconButton(
+                    text = "My 1st Million",
+                    //textColor = if (isSystemInDarkTheme()) goldDark else goldLight,
+                    iconId = R.drawable.ic_diamond
+                ) {
+                    navigateToMy1stMillion()
+                }
             }
         }
+
     }
+
 }
 
 @Preview(showBackground = true)

@@ -18,7 +18,7 @@ plugins {
 
 androidGitVersion {
     // by default only "master" was hidden
-    hideBranches = [ 'main' ]
+    hideBranches = ['main']
 }
 
 android {
@@ -81,6 +81,7 @@ android {
         release {
             debuggable = false
             minifyEnabled true
+            shrinkResources true
             signingConfig signingConfigs.releaseConfig
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -97,12 +98,21 @@ android {
         }
     }
 
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+//    lintOptions {
+//        checkReleaseBuilds false
+//        abortOnError false
+//    }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     buildFeatures {
         compose true
@@ -121,17 +131,17 @@ android {
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions.freeCompilerArgs += ["-Xopt-in=kotlin.RequiresOptIn",
-                                       "-Xopt-in=kotlinx.coroutines.FlowPreview",
-                                       "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
-                                       "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-                                       "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-                                       "-Xopt-in=com.google.accompanist.pager.ExperimentalPagerApi"]
+    kotlinOptions.freeCompilerArgs += [
+            "-Xopt-in=kotlin.RequiresOptIn",
+            "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
+            "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi"
+    ]
 }
 
 dependencies {
     // compose BOM
-    def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
+    def composeBom = platform('androidx.compose:compose-bom:2023.01.00')
     implementation composeBom
     androidTestImplementation composeBom
 
@@ -141,10 +151,15 @@ dependencies {
     implementation 'androidx.compose.foundation:foundation'
     debugImplementation 'androidx.compose.ui:ui-tooling'
 
+    // animations
+    implementation "androidx.compose.animation:animation"
+    implementation "androidx.compose.animation:animation-core"
+
+
     // --------------------
     implementation "androidx.core:core-ktx:1.9.0"
     implementation "androidx.activity:activity-compose:1.6.1"
-    implementation "androidx.compose.compiler:compiler:1.3.2"
+    implementation "androidx.compose.compiler:compiler:1.4.0"
     implementation "androidx.navigation:navigation-compose:2.5.3"
 
     // lifecycle & view models
@@ -192,6 +207,7 @@ dependencies {
 //    implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist_version"
 
     //implementation("com.himanshoe:charty:1.0.1")
+    //implementation 'com.github.vitalnik:Charty:1.0.1'
 
     // room
     implementation("androidx.room:room-runtime:$room_version")
@@ -209,7 +225,7 @@ dependencies {
     // Needed for createAndroidComposeRule, but not createComposeRule:
     debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
 
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.1'

@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.aripuca.finhelper.ui.theme.*
 
@@ -63,3 +64,10 @@ fun InterestProgress(principalPercent: Float) {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun InterestProgressPreview() {
+    FinHelperTheme {
+        InterestProgress(50.0f)
+    }
+}

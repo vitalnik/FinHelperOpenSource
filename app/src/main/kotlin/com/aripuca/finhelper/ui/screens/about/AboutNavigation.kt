@@ -23,6 +23,7 @@ fun NavGraphBuilder.aboutScreen(
     nav: NavController,
     mainViewModel: MainViewModel,
     launchEmail: () -> Unit,
+    launchWeb: (url: String) -> Unit = {},
     launchPurchaseFlow: (ProductDetails) -> Unit
 ) {
 
@@ -68,6 +69,10 @@ fun NavGraphBuilder.aboutScreen(
             onLaunchEmail = {
                 viewModel.logSupportEmailClick()
                 launchEmail()
+            },
+            onOpenGitHub = {
+                viewModel.logGitHubLinkClick()
+                launchWeb("https://github.com/vitalnik/FinHelperOpenSource")
             },
             onRemoveAds = {
                 viewModel.logRemoveAdsPurchaseStart()

@@ -86,7 +86,7 @@ class InvestmentCalculator(
         var totalInterest = 0.0
         var totalValue: Double
 
-        repeat(yearsToGrow) { year ->
+        repeat(yearsToGrow) {
 
             totalValue =
                 principalBalance * (1 + rn).pow(nt) + regularAddition * ((1 + rn).pow(nt) - 1) / rn

@@ -2,12 +2,15 @@ package com.aripuca.finhelper.ui.screens.about
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign.Companion.Center
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.billingclient.api.ProductDetails
@@ -18,6 +21,7 @@ import com.aripuca.finhelper.ui.components.buttons.SmallButton
 import com.aripuca.finhelper.ui.components.layout.VerticalSpacer
 import com.aripuca.finhelper.ui.components.text.TextLink
 import com.aripuca.finhelper.ui.theme.FinHelperTheme
+import org.w3c.dom.Text
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -28,6 +32,7 @@ fun AboutScreen(
     productDetailsList: List<ProductDetails> = listOf(),
     onBackPress: () -> Unit = {},
     onLaunchEmail: () -> Unit = {},
+    onOpenGitHub: () -> Unit = {},
     onRemoveAds: (ProductDetails) -> Unit = {},
     onBuyMeCoffee: (ProductDetails) -> Unit = {},
 ) {
@@ -91,13 +96,10 @@ fun AboutScreen(
 
                 VerticalSpacer()
 
-                var supportText = ""
-                if (removeAdsPurchased || buyMeCoffeePurchased) {
-                    supportText =
-                        "Thank you for supporting the development of the Financial Helper app. We appreciate your help."
+                val supportText = if (removeAdsPurchased || buyMeCoffeePurchased) {
+                    "Thank you for supporting the development of the Financial Helper app. We appreciate your help."
                 } else {
-                    supportText =
-                        "Please consider supporting the development of this app. We appreciate your help. Thanks!"
+                    "Please consider supporting the development of this app. We appreciate your help. Thanks!"
                 }
 
                 Card(
@@ -111,6 +113,35 @@ fun AboutScreen(
                     ) {
                         Text(
                             text = supportText,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+
+                VerticalSpacer()
+
+                Card(
+                    shape = RoundedCornerShape(16.dp), elevation = CardDefaults.cardElevation()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(all = 16.dp),
+                    ) {
+                        Text(
+                            text = "The source code of this app is available on GitHub:",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        VerticalSpacer(8.dp)
+                        TextLink(
+                            text = "github.com/vitalnik/FinHelperOpenSource",
+                            modifier = Modifier.align(alignment = CenterHorizontally)
+                        ) {
+                            onOpenGitHub()
+                        }
+                        VerticalSpacer(8.dp)
+                        Text(
+                            text = "Please fill free to report any issues there.",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }

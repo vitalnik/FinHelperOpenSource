@@ -18,6 +18,10 @@ class AboutViewModel @Inject constructor(
         analyticsClient.log(FirebaseAnalyticsClient.ABOUT_SCREEN_SUPPORT_EMAIL_CLICK)
     }
 
+    fun logGitHubLinkClick() {
+        analyticsClient.log(FirebaseAnalyticsClient.ABOUT_SCREEN_GITHUB_LINK_CLICK)
+    }
+
     fun logRemoveAdsPurchaseStart() {
         analyticsClient.log(FirebaseAnalyticsClient.REMOVE_ADS_PURCHASE_START)
     }

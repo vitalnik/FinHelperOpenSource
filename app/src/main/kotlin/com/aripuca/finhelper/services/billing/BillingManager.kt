@@ -182,15 +182,15 @@ class BillingManager @Inject constructor(
         purchasesFlow.emit(purchasesResult.purchasesList)
     }
 
-    private suspend fun consumePurchase(purchase: Purchase) {
-        val consumeParams =
-            ConsumeParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-        val consumeResult = withContext(Dispatchers.IO) {
-            billingClient.consumePurchase(consumeParams)
-        }
-    }
+//    private suspend fun consumePurchase(purchase: Purchase) {
+//        val consumeParams =
+//            ConsumeParams.newBuilder()
+//                .setPurchaseToken(purchase.purchaseToken)
+//                .build()
+//        val consumeResult = withContext(Dispatchers.IO) {
+//            billingClient.consumePurchase(consumeParams)
+//        }
+//    }
 
     fun launchBillingFlow(activity: Activity, flowParams: BillingFlowParams): Int {
         return billingClient.launchBillingFlow(activity, flowParams).responseCode
