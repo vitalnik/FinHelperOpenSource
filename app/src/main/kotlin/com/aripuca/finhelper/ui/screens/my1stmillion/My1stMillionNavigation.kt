@@ -4,14 +4,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import com.aripuca.finhelper.MainViewModel
 import com.aripuca.finhelper.services.billing.checkPurchases
 import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getFrequency
-import com.google.accompanist.navigation.animation.composable
-import androidx.compose.runtime.remember
 
 fun NavGraphBuilder.my1stMillionScreen(
     nav: NavController,
@@ -38,7 +38,6 @@ fun NavGraphBuilder.my1stMillionScreen(
 
         // calculated fields
         val totalInvestment by viewModel.totalInvestment
-        val totalValue by viewModel.totalValue
         val totalInterestEarned by viewModel.totalInterestEarned
 
         val yearsToGrow by viewModel.yearsToGrow
@@ -50,7 +49,6 @@ fun NavGraphBuilder.my1stMillionScreen(
 
         My1stMillionScreen(
             adsRemoved = adsRemoved,
-            totalValue = totalValue,
             totalInterestEarned = totalInterestEarned,
             totalInvestment = totalInvestment,
             initialPrincipalAmount = principalAmount,
@@ -71,7 +69,6 @@ fun NavGraphBuilder.my1stMillionScreen(
                 viewModel.updateRegularAdditionFrequency(it)
             },
             onOpenInInvestments = {
-                viewModel.logOpenInInvestments()
                 viewModel.openInInvestments {
                     nav.navigate("investment_screen")
                 }

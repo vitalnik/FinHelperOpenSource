@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,7 +18,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +33,9 @@ import com.aripuca.finhelper.ui.components.input.OptionItem
 import com.aripuca.finhelper.ui.components.layout.*
 import com.aripuca.finhelper.ui.components.text.HeaderText
 import com.aripuca.finhelper.ui.screens.common.HistoryPanel
+import com.aripuca.finhelper.ui.screens.common.HistoryPanelEvents
 import com.aripuca.finhelper.ui.screens.common.HistoryPanelState
+import com.aripuca.finhelper.ui.components.input.TextFieldRow
 import com.aripuca.finhelper.ui.screens.common.TopAppBarRow
 import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getText
 import com.aripuca.finhelper.ui.theme.*
@@ -67,7 +67,8 @@ fun InvestmentScreen(
     yearlyTable: List<YearlyTableItem> = listOf(),
     onHelpClick: () -> Unit = {},
     onBackPress: () -> Unit = {},
-    historyPanelState: HistoryPanelState = HistoryPanelState(),
+    historyPanelState: HistoryPanelState,
+    historyPanelEvents: HistoryPanelEvents,
 ) {
 
     val listState = rememberLazyListState()
@@ -103,6 +104,7 @@ fun InvestmentScreen(
             LazyColumn(state = listState, modifier = Modifier.weight(1f, true)) {
 
                 item {
+                    VerticalSpacer()
                     InputFields(
                         principalAmount,
                         onPrincipalAmountChanged,
@@ -118,15 +120,10 @@ fun InvestmentScreen(
                 }
 
                 item {
+                    VerticalSpacer(height = 24.dp)
                     HistoryPanel(
-                        selectedHistoryItemIndex = historyPanelState.selectedHistoryItemIndex,
-                        historyItemCount = historyPanelState.historyItemCount,
-                        saveEnabled = historyPanelState.saveHistoryItemEnabled,
-                        onAddClick = historyPanelState.onAddHistoryItem,
-                        onSaveClick = historyPanelState.onSaveHistoryItem,
-                        onDeleteClick = historyPanelState.onDeleteHistoryItem,
-                        onPrevClick = historyPanelState.onLoadPrevHistoryItem,
-                        onNextClick = historyPanelState.onLoadNextHistoryItem,
+                        state = historyPanelState,
+                        events = historyPanelEvents
                     )
                 }
 
@@ -137,13 +134,13 @@ fun InvestmentScreen(
                 }
 
                 stickyHeader {
-                    CalculatedFields(
-                        totalInvestment,
-                        totalInterestEarned,
-                        totalValue,
-                        principalPercent
-                    )
                     if (inputValid) {
+                        CalculatedFields(
+                            totalInvestment,
+                            totalInterestEarned,
+                            totalValue,
+                            principalPercent
+                        )
                         Surface {
                             Column {
                                 Row(
@@ -182,6 +179,10 @@ fun InvestmentScreen(
                             TableCellFixed(text = item.totalValue.toCurrency())
                         }
                     }
+                }
+
+                item {
+                    VerticalSpacer()
                 }
             }
 
@@ -292,7 +293,6 @@ private fun CalculatedFields(
                 value = totalValue,
                 color = if (isSystemInDarkTheme()) totalDark else totalLight
             )
-
             VerticalSpacer()
         }
     }
@@ -311,9 +311,6 @@ private fun InputFields(
     regularAdditionFrequency: Frequency,
     onRegularAdditionFrequencyChanged: (Frequency) -> Unit
 ) {
-
-    VerticalSpacer()
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -381,28 +378,6 @@ private fun InputFields(
 }
 
 @Composable
-private fun RowScope.TextFieldRow(
-    label: String,
-    value: String,
-    onValueChanged: (String) -> Unit,
-    enabled: Boolean = true,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = {
-            onValueChanged(it)
-        },
-        modifier = Modifier.weight(1f, true),
-        label = { Text(text = label) },
-        enabled = enabled,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number,
-        ),
-        singleLine = true,
-    )
-}
-
-@Composable
 private fun YearlyTableHeader(scrollState: ScrollState) {
     Row(
         modifier = Modifier
@@ -448,6 +423,8 @@ fun HomeScreenPreview() {
             yearsToGrow = "",
             regularAdditionFrequency = Frequency.MONTHLY,
             yearlyTable = listOf(),
+            historyPanelState = HistoryPanelState(),
+            historyPanelEvents = HistoryPanelEvents()
         )
     }
 }

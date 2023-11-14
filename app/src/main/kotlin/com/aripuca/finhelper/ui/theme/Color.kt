@@ -82,5 +82,11 @@ val interestLight = progress2Light
 val totalDark = progressOutlineDark
 val totalLight = progressOutlineLight
 
+val loanAmountDark = progressOutlineDark
+val loanAmountLight = progressOutlineLight
+
+val monthlyPaymentDark = progress2Dark
+val monthlyPaymentLight = progress2Light
+
 val goldDark = Color(0xFFD4AF37)
 val goldLight = Color(0xFFFF9800)

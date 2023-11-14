@@ -1,31 +1,46 @@
 package com.aripuca.finhelper.calculations
 
+import javax.inject.Inject
 import kotlin.math.pow
 
-class GoalCalculator(
-    private val initialPrincipalBalance: Double,
-    private val regularAddition: Double,
-    private val regularAdditionFrequency: Double,
-    private val interestRate: Double,
-    private val numberOfTimesInterestApplied: Double,
-    private val goalAmount: Double,
-) {
+data class GoalResults(
+    var totalValue: Double = 0.0,
+    var totalInterestEarned: Double = 0.0,
+    var totalInvestment: Double = 0.0,
+    var yearsToGrow: Int = 0
+)
 
-    var totalValue: Double = 0.0
-    var totalInterestEarned: Double = 0.0
-    var totalInvestment: Double = 0.0
-    var yearsToGrow = 0
+class GoalCalculator @Inject constructor() {
 
-    fun calculate() {
+    private var totalValue: Double = 0.0
+    private var totalInterestEarned: Double = 0.0
+    private var totalInvestment: Double = 0.0
+    private var yearsToGrow: Int = 0
+
+    fun calculate(
+        initialPrincipalBalance: Double,
+        regularAddition: Double,
+        regularAdditionFrequency: Double,
+        interestRate: Double,
+        numberOfTimesInterestApplied: Double,
+        goalAmount: Double
+    ): GoalResults {
 
         yearsToGrow = -1
 
         if (numberOfTimesInterestApplied == 0.0 || interestRate == 0.0) {
+
             yearsToGrow = 100
             totalValue = initialPrincipalBalance
             totalInvestment = initialPrincipalBalance
             totalInterestEarned = 0.0
-            return
+
+            return GoalResults(
+                totalValue = totalValue,
+                totalInterestEarned = totalInterestEarned,
+                totalInvestment = totalInvestment,
+                yearsToGrow = yearsToGrow,
+            )
         }
 
         do {
@@ -37,11 +52,8 @@ class GoalCalculator(
             val rDivByN = r / numberOfTimesInterestApplied
 
             if (regularAddition > 0) {
-
-                val principalBalance = initialPrincipalBalance
-
                 totalValue =
-                    principalBalance * (1 + rDivByN).pow(nt) +
+                    initialPrincipalBalance * (1 + rDivByN).pow(nt) +
                             regularAddition * ((1 + rDivByN).pow(nt) - 1) / rDivByN
 
                 totalInterestEarned =
@@ -61,6 +73,13 @@ class GoalCalculator(
             }
 
         } while (totalValue < goalAmount)
+
+        return GoalResults(
+            totalValue = totalValue,
+            totalInterestEarned = totalInterestEarned,
+            totalInvestment = totalInvestment,
+            yearsToGrow = yearsToGrow,
+        )
 
     }
 

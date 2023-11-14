@@ -3,12 +3,27 @@ package com.aripuca.finhelper.services.billing
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.ProductDetails
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryPurchasesParams
+import com.android.billingclient.api.queryProductDetails
+import com.android.billingclient.api.queryPurchasesAsync
 import com.aripuca.finhelper.services.analytics.AnalyticsClient
 import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
@@ -22,7 +37,7 @@ fun List<Purchase?>.checkPurchases(): Boolean =
 fun List<Purchase?>.checkRemoveAdsPurchase(): Boolean =
     this.any {
 
-        Log.d("TAG", ">>> checkRemoveAdsPurchase Purchase: $it");
+        Log.d("TAG", ">>> checkRemoveAdsPurchase Purchase: $it")
 
         it?.products?.contains(BillingManager.REMOVE_ADS_INAPP_PRODUCT) ?: false
     }
@@ -30,7 +45,7 @@ fun List<Purchase?>.checkRemoveAdsPurchase(): Boolean =
 fun List<Purchase?>.checkBuyMeCoffeePurchase(): Boolean =
     this.any {
 
-        Log.d("TAG", ">>> checkBuyMeCoffeePurchase Purchase: $it");
+        Log.d("TAG", ">>> checkBuyMeCoffeePurchase Purchase: $it")
 
         it?.products?.contains(BillingManager.BUY_ME_COFFEE_INAPP_PRODUCT) ?: false
     }
@@ -63,9 +78,13 @@ class BillingManager @Inject constructor(
     private val job = Job()
     override val coroutineContext: CoroutineContext = Dispatchers.Default + job
 
-    val purchasesFlow: MutableStateFlow<List<Purchase?>> = MutableStateFlow(mutableListOf())
-    val productDetailsFlow: MutableStateFlow<List<ProductDetails>> =
+    private val _purchasesFlow: MutableStateFlow<List<Purchase?>> = MutableStateFlow(mutableListOf())
+    val purchasesFlow = _purchasesFlow.asStateFlow()
+
+    private val _productDetailsFlow: MutableStateFlow<List<ProductDetails>> =
         MutableStateFlow(mutableListOf())
+
+    val productDetailsFlow = _productDetailsFlow.asStateFlow()
 
     private val purchasesUpdatedListener =
         PurchasesUpdatedListener { billingResult, purchases ->
@@ -168,7 +187,7 @@ class BillingManager @Inject constructor(
         }
         Log.d("TAG", ">>> queryProductDetails: $productDetailsResult")
         productDetailsResult.productDetailsList?.let {
-            productDetailsFlow.emit(it)
+            _productDetailsFlow.emit(it)
         }
     }
 
@@ -179,7 +198,7 @@ class BillingManager @Inject constructor(
             )
         }
         Log.d("TAG", ">>> queryPurchases: $purchasesResult")
-        purchasesFlow.emit(purchasesResult.purchasesList)
+        _purchasesFlow.emit(purchasesResult.purchasesList)
     }
 
 //    private suspend fun consumePurchase(purchase: Purchase) {

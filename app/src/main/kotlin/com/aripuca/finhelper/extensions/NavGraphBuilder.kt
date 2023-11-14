@@ -1,10 +1,10 @@
 package com.aripuca.finhelper.extensions
 
-import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
-import com.google.accompanist.navigation.animation.navigation
+import androidx.navigation.compose.navigation
 
 fun NavGraphBuilder.navigationFlow(
     startDestination: String,
@@ -20,26 +20,26 @@ fun NavGraphBuilder.navigationFlow(
     builder = builder
 )
 
-fun AnimatedContentScope<NavBackStackEntry>.slideIntoLeft() = slideIntoContainer(
-    towards = AnimatedContentScope.SlideDirection.Left,
+fun AnimatedContentTransitionScope<NavBackStackEntry>.slideIntoLeft() = slideIntoContainer(
+    towards = AnimatedContentTransitionScope.SlideDirection.Left,
     animationSpec = tween(),
     initialOffset = { it }
 )
 
-fun AnimatedContentScope<NavBackStackEntry>.slideOutOfLeft() = slideOutOfContainer(
-    towards = AnimatedContentScope.SlideDirection.Left,
+fun AnimatedContentTransitionScope<NavBackStackEntry>.slideOutOfLeft() = slideOutOfContainer(
+    towards = AnimatedContentTransitionScope.SlideDirection.Left,
     animationSpec = tween(),
     targetOffset = { it }
 )
 
-fun AnimatedContentScope<NavBackStackEntry>.slideIntoRight() = slideIntoContainer(
-    towards = AnimatedContentScope.SlideDirection.Right,
+fun AnimatedContentTransitionScope<NavBackStackEntry>.slideIntoRight() = slideIntoContainer(
+    towards = AnimatedContentTransitionScope.SlideDirection.Right,
     animationSpec = tween(),
     initialOffset = { it }
 )
 
-fun AnimatedContentScope<NavBackStackEntry>.slideOutOfRight() = slideOutOfContainer(
-    towards = AnimatedContentScope.SlideDirection.Right,
+fun AnimatedContentTransitionScope<NavBackStackEntry>.slideOutOfRight() = slideOutOfContainer(
+    towards = AnimatedContentTransitionScope.SlideDirection.Right,
     animationSpec = tween(),
     targetOffset = { it }
 )

@@ -1,5 +1,6 @@
 package com.aripuca.finhelper.calculations
 
+import javax.inject.Inject
 import kotlin.math.pow
 
 data class YearlyTableItem(
@@ -10,30 +11,33 @@ data class YearlyTableItem(
     val totalValue: Double,
 )
 
-class InvestmentCalculator(
-    private val initialPrincipalBalance: Double,
-    private val regularAddition: Double,
-    private val regularAdditionFrequency: Double,
-    private val interestRate: Double,
-    private val numberOfTimesInterestApplied: Double,
-    private val yearsToGrow: Int,
-) {
-
-    var totalValue: Double = 0.0
-    var totalInterestEarned: Double = 0.0
-    var totalInvestment: Double = 0.0
-    var principalPercent: Double = 0.0
-
+data class InvestmentResults(
+    var totalValue: Double = 0.0,
+    var totalInterestEarned: Double = 0.0,
+    var totalInvestment: Double = 0.0,
+    var principalPercent: Double = 0.0,
     var yearlyTable: MutableList<YearlyTableItem> = mutableListOf()
+)
 
-    fun calculate() {
+class InvestmentCalculator @Inject constructor() {
 
-        if (numberOfTimesInterestApplied == 0.0 || interestRate == 0.0) {
-            totalValue = initialPrincipalBalance
-            totalInvestment = initialPrincipalBalance
-            totalInterestEarned = 0.0
-            yearlyTable.clear()
-            return
+    private var totalValue: Double = 0.0
+    private var totalInterestEarned: Double = 0.0
+    private var totalInvestment: Double = 0.0
+    private var principalPercent: Double = 0.0
+    private var yearlyTable: MutableList<YearlyTableItem> = mutableListOf()
+
+    fun calculate(
+        initialPrincipalBalance: Double,
+        regularAddition: Double,
+        regularAdditionFrequency: Double,
+        interestRate: Double,
+        numberOfTimesInterestApplied: Double,
+        yearsToGrow: Int,
+    ):InvestmentResults {
+
+        if (numberOfTimesInterestApplied == 0.0 || interestRate == 0.0 || yearsToGrow == 0) {
+            return InvestmentResults()
         }
 
         val nt = numberOfTimesInterestApplied * yearsToGrow
@@ -69,10 +73,35 @@ class InvestmentCalculator(
             0.0
         }
 
-        populateYearlyTable()
+        populateYearlyTable(
+            initialPrincipalBalance,
+            regularAddition,
+            regularAdditionFrequency,
+            interestRate,
+            numberOfTimesInterestApplied,
+            yearsToGrow,
+        )
+
+        return InvestmentResults(
+            totalValue = totalValue,
+            totalInterestEarned = totalInterestEarned,
+            totalInvestment = totalInvestment,
+            principalPercent = principalPercent,
+            yearlyTable = yearlyTable
+        )
+
     }
 
-    private fun populateYearlyTable() {
+    private fun populateYearlyTable(
+        initialPrincipalBalance: Double,
+        regularAddition: Double,
+        regularAdditionFrequency: Double,
+        interestRate: Double,
+        numberOfTimesInterestApplied: Double,
+        yearsToGrow: Int,
+    ) {
+
+        yearlyTable.clear()
 
         val nt = numberOfTimesInterestApplied
         val rn = interestRate / 100 / numberOfTimesInterestApplied

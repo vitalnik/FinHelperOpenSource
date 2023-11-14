@@ -1,6 +1,8 @@
 package com.aripuca.finhelper.ui.screens.investment
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
@@ -16,7 +18,6 @@ import com.aripuca.finhelper.services.analytics.AnalyticsClient
 import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
 import com.aripuca.finhelper.services.history.AppDatabase
 import com.aripuca.finhelper.services.history.InvestmentHistoryEntity
-import com.aripuca.finhelper.services.history.MortgageHistoryEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -57,6 +58,7 @@ enum class Frequency(val value: Int) {
 
 @HiltViewModel
 class InvestmentViewModel @Inject constructor(
+    private val investmentCalculator: InvestmentCalculator,
     private val localStorage: LocalStorage,
     private val analyticsClient: AnalyticsClient,
     private val appDatabase: AppDatabase,
@@ -64,7 +66,7 @@ class InvestmentViewModel @Inject constructor(
 
     // history
     val investmentHistoryFlow = appDatabase.investmentHistoryDao().getAllAsFlow()
-    val selectedHistoryItemIndex = mutableStateOf(localStorage.getInvestmentHistorySelectedIndex(0))
+    val selectedHistoryItemIndex = mutableIntStateOf(localStorage.getInvestmentHistorySelectedIndex(0))
     val saveHistoryItemEnabled = mutableStateOf(false)
 
     // input fields
@@ -76,7 +78,7 @@ class InvestmentViewModel @Inject constructor(
     // number of time periods elapsed
     val yearsToGrowInput = mutableStateOf(localStorage.getInvestmentYearsToGrow("10"))
     val regularContributionInput = mutableStateOf(localStorage.getInvestmentRegularAddition("100"))
-    val regularAdditionFrequencyInput = mutableStateOf(
+    val regularAdditionFrequencyInput = mutableIntStateOf(
         localStorage.getInvestmentRegularAdditionFrequency(
             Frequency.MONTHLY.value
         )
@@ -88,13 +90,13 @@ class InvestmentViewModel @Inject constructor(
     val totalValue = mutableStateOf("")
 
     val yearlyTable = mutableStateOf<List<YearlyTableItem>>(listOf())
-    val principalPercent = mutableStateOf(50.0)
+    val principalPercent = mutableDoubleStateOf(50.0)
 
     fun logScreenView() {
         analyticsClient.log(FirebaseAnalyticsClient.INVESTMENT_SCREEN_VIEW)
     }
 
-    fun calculateInvestment() {
+    private fun calculateInvestment() {
 
         validateRequiredFields()
 
@@ -104,24 +106,22 @@ class InvestmentViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            val investmentCalculator = InvestmentCalculator(
+            val results = investmentCalculator.calculate(
                 initialPrincipalBalance = initialInvestmentInput.value.toDoubleOrNull() ?: 0.0,
                 regularAddition = regularContributionInput.value.toDoubleOrNull() ?: 0.0,
-                regularAdditionFrequency = regularAdditionFrequencyInput.value.toDouble(),
+                regularAdditionFrequency = regularAdditionFrequencyInput.intValue.toDouble(),
                 interestRate = interestRateInput.value.toDoubleOrNull() ?: 0.0,
-                numberOfTimesInterestApplied = regularAdditionFrequencyInput.value.toDouble(),
+                numberOfTimesInterestApplied = regularAdditionFrequencyInput.intValue.toDouble(),
                 yearsToGrow = yearsToGrowInput.value.toIntOrNull() ?: 0,
             )
 
-            investmentCalculator.calculate()
+            totalValue.value = results.totalValue.toCurrency()
+            totalInterestEarned.value = results.totalInterestEarned.toCurrency()
+            totalInvestment.value = results.totalInvestment.toCurrency()
 
-            totalValue.value = investmentCalculator.totalValue.toCurrency()
-            totalInterestEarned.value = investmentCalculator.totalInterestEarned.toCurrency()
-            totalInvestment.value = investmentCalculator.totalInvestment.toCurrency()
+            yearlyTable.value = results.yearlyTable
 
-            yearlyTable.value = investmentCalculator.yearlyTable
-
-            principalPercent.value = investmentCalculator.principalPercent
+            principalPercent.doubleValue = results.principalPercent
 
             saveUserInputInLocalStorage()
         }
@@ -139,11 +139,11 @@ class InvestmentViewModel @Inject constructor(
         localStorage.saveString(LocalStorage.INVESTMENT_YEARS_TO_GROW, yearsToGrowInput.value)
         localStorage.saveString(
             LocalStorage.INVESTMENT_REGULAR_ADDITION_FREQUENCY,
-            regularAdditionFrequencyInput.value.toString()
+            regularAdditionFrequencyInput.intValue.toString()
         )
         localStorage.saveInt(
             LocalStorage.INVESTMENT_HISTORY_SELECTED_INDEX,
-            selectedHistoryItemIndex.value
+            selectedHistoryItemIndex.intValue
         )
     }
 
@@ -175,7 +175,7 @@ class InvestmentViewModel @Inject constructor(
                 interestRate = interestRateInput.value,
                 numberOfYears = yearsToGrowInput.value,
                 regularContribution = regularContributionInput.value,
-                contributionFrequency = regularAdditionFrequencyInput.value.toString(),
+                contributionFrequency = regularAdditionFrequencyInput.intValue.toString(),
                 createdAt = Date().toIsoString(),
                 updatedAt = Date().toIsoString(),
             )
@@ -184,7 +184,7 @@ class InvestmentViewModel @Inject constructor(
 
             val historyList: List<InvestmentHistoryEntity> =
                 appDatabase.investmentHistoryDao().getAll()
-            selectedHistoryItemIndex.value = historyList.count() - 1
+            selectedHistoryItemIndex.intValue = historyList.count() - 1
 
             analyticsClient.log(FirebaseAnalyticsClient.INVESTMENT_HISTORY_ADDED)
         }
@@ -194,8 +194,8 @@ class InvestmentViewModel @Inject constructor(
         viewModelScope.launch {
             val historyList: List<InvestmentHistoryEntity> =
                 appDatabase.investmentHistoryDao().getAll()
-            if (historyList.isNotEmpty() && selectedHistoryItemIndex.value < historyList.count()) {
-                val selectedHistoryItem = historyList[selectedHistoryItemIndex.value].copy()
+            if (historyList.isNotEmpty() && selectedHistoryItemIndex.intValue < historyList.count()) {
+                val selectedHistoryItem = historyList[selectedHistoryItemIndex.intValue].copy()
                 val historyEntity = InvestmentHistoryEntity(
                     id = selectedHistoryItem.id,
                     title = selectedHistoryItem.title,
@@ -203,7 +203,7 @@ class InvestmentViewModel @Inject constructor(
                     interestRate = interestRateInput.value,
                     numberOfYears = yearsToGrowInput.value,
                     regularContribution = regularContributionInput.value,
-                    contributionFrequency = regularAdditionFrequencyInput.value.toString(),
+                    contributionFrequency = regularAdditionFrequencyInput.intValue.toString(),
                     createdAt = selectedHistoryItem.createdAt,
                     updatedAt = Date().toIsoString(),
                 )
@@ -220,12 +220,12 @@ class InvestmentViewModel @Inject constructor(
             val historyList: List<InvestmentHistoryEntity> =
                 appDatabase.investmentHistoryDao().getAll()
 
-            if (historyList.isNotEmpty() && selectedHistoryItemIndex.value < historyList.count()) {
+            if (historyList.isNotEmpty() && selectedHistoryItemIndex.intValue < historyList.count()) {
 
-                val selectedHistoryItem = historyList[selectedHistoryItemIndex.value]
+                val selectedHistoryItem = historyList[selectedHistoryItemIndex.intValue]
                 appDatabase.investmentHistoryDao().deleteById(selectedHistoryItem.id)
 
-                if (selectedHistoryItemIndex.value == historyList.count() - 1) {
+                if (selectedHistoryItemIndex.intValue == historyList.count() - 1) {
                     decrementSelectedHistoryItemIndex(logAnalytics = false)
                 }
 
@@ -234,19 +234,15 @@ class InvestmentViewModel @Inject constructor(
         }
     }
 
-    fun setSelectedHistoryItemIndex(index: Int) {
-        selectedHistoryItemIndex.value = index
-    }
-
     fun decrementSelectedHistoryItemIndex(logAnalytics: Boolean = true) {
         viewModelScope.launch {
             val historyList: List<InvestmentHistoryEntity> =
                 appDatabase.investmentHistoryDao().getAll()
-            if (selectedHistoryItemIndex.value > 0 && historyList.isNotEmpty()) {
-                selectedHistoryItemIndex.value--
+            if (selectedHistoryItemIndex.intValue > 0 && historyList.isNotEmpty()) {
+                selectedHistoryItemIndex.intValue--
             } else {
-                if (selectedHistoryItemIndex.value == 0 && historyList.isNotEmpty()) {
-                    selectedHistoryItemIndex.value = historyList.count() - 1
+                if (selectedHistoryItemIndex.intValue == 0 && historyList.isNotEmpty()) {
+                    selectedHistoryItemIndex.intValue = historyList.count() - 1
                 }
             }
             if (logAnalytics) {
@@ -259,25 +255,29 @@ class InvestmentViewModel @Inject constructor(
         viewModelScope.launch {
             val historyList: List<InvestmentHistoryEntity> =
                 appDatabase.investmentHistoryDao().getAll()
-            if (selectedHistoryItemIndex.value < historyList.count() - 1) {
-                selectedHistoryItemIndex.value++
+            if (selectedHistoryItemIndex.intValue < historyList.count() - 1) {
+                selectedHistoryItemIndex.intValue++
             } else {
-                if (selectedHistoryItemIndex.value == historyList.count() - 1) {
-                    selectedHistoryItemIndex.value = 0
+                if (selectedHistoryItemIndex.intValue == historyList.count() - 1) {
+                    selectedHistoryItemIndex.intValue = 0
                 }
             }
             analyticsClient.log(FirebaseAnalyticsClient.INVESTMENT_HISTORY_SCROLL)
         }
     }
 
+    fun loadLocallySaved() {
+        calculateInvestment()
+    }
+
     fun loadHistoryItem(historyList: List<InvestmentHistoryEntity>) {
-        if (historyList.isNotEmpty() && selectedHistoryItemIndex.value < historyList.count()) {
-            val selectedHistoryItem = historyList[selectedHistoryItemIndex.value]
+        if (historyList.isNotEmpty() && selectedHistoryItemIndex.intValue < historyList.count()) {
+            val selectedHistoryItem = historyList[selectedHistoryItemIndex.intValue]
             initialInvestmentInput.value = selectedHistoryItem.initialInvestment
             interestRateInput.value = selectedHistoryItem.interestRate
             yearsToGrowInput.value = selectedHistoryItem.numberOfYears
             regularContributionInput.value = selectedHistoryItem.regularContribution
-            regularAdditionFrequencyInput.value =
+            regularAdditionFrequencyInput.intValue =
                 selectedHistoryItem.contributionFrequency.toInt()
 
             setSaveHistoryItemEnabled()
@@ -338,7 +338,7 @@ class InvestmentViewModel @Inject constructor(
     }
 
     fun updateRegularAdditionFrequency(frequency: Frequency) {
-        regularAdditionFrequencyInput.value = frequency.value
+        regularAdditionFrequencyInput.intValue = frequency.value
         setSaveHistoryItemEnabled()
         calculateInvestment()
     }
@@ -351,13 +351,13 @@ class InvestmentViewModel @Inject constructor(
                 appDatabase.investmentHistoryDao().getAll()
 
             if (historyList.isNotEmpty()) {
-                val selectedHistoryItem = historyList[selectedHistoryItemIndex.value]
+                val selectedHistoryItem = historyList[selectedHistoryItemIndex.intValue]
                 saveHistoryItemEnabled.value =
                     selectedHistoryItem.initialInvestment != initialInvestmentInput.value ||
                             selectedHistoryItem.interestRate != interestRateInput.value ||
                             selectedHistoryItem.numberOfYears != yearsToGrowInput.value ||
                             selectedHistoryItem.regularContribution != regularContributionInput.value ||
-                            selectedHistoryItem.contributionFrequency != regularAdditionFrequencyInput.value.toString()
+                            selectedHistoryItem.contributionFrequency != regularAdditionFrequencyInput.intValue.toString()
             }
         }
 

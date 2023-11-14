@@ -1,10 +1,16 @@
 package com.aripuca.finhelper.ui.theme
 
+import LocalDimensions
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -77,7 +83,6 @@ fun FinHelperTheme(
     isDynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-
     val dynamicColor = isDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val myColorScheme = when {
         dynamicColor && isDarkTheme -> {
@@ -94,6 +99,31 @@ fun FinHelperTheme(
         colorScheme = myColorScheme,
         typography = Typography,
         shapes = Shapes,
-        content = content
+        content = {
+            CompositionLocalProvider(
+                LocalDimensions provides LocalDimensionsInstance.instance(getWindowSizeClass()),
+            ) {
+                content()
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+private fun getWindowSizeClass(): WindowSizeClass {
+    val dm = LocalContext.current.resources.displayMetrics
+    val widthPixels = dm.widthPixels
+    val heightPixels = dm.heightPixels
+    val density = dm.density
+
+    val widthDp = widthPixels.toFloat() / density
+    val heightDp = heightPixels.toFloat() / density
+
+    return WindowSizeClass.calculateFromSize(
+        DpSize(
+            widthDp.dp,
+            heightDp.dp
+        )
     )
 }

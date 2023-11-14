@@ -23,10 +23,10 @@ fun InterestProgress(principalPercent: Float) {
                     width = 2.dp,
                     color = if (isSystemInDarkTheme()) progressOutlineDark else progressOutlineLight
                 ),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(50)
             )
             .clip(
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(50)
             )
 
     ) {

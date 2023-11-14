@@ -25,9 +25,14 @@ fun HomeScreen(
     navigateToAbout: () -> Unit = {},
 ) {
 
-    Box(contentAlignment = Alignment.BottomCenter) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
 
         Image(
+            modifier = Modifier
+                .fillMaxWidth(),
             painter = painterResource(id = R.drawable.home_bg),
             contentDescription = stringResource(id = R.string.app_name),
             contentScale = ContentScale.FillWidth,

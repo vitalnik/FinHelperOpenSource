@@ -1,6 +1,5 @@
 package com.aripuca.finhelper.ui.screens.about
 
-import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -15,8 +14,8 @@ import com.aripuca.finhelper.R
 import com.aripuca.finhelper.extensions.getVersionName
 import com.aripuca.finhelper.services.billing.checkBuyMeCoffeePurchase
 import com.aripuca.finhelper.services.billing.checkRemoveAdsPurchase
-import com.google.accompanist.navigation.animation.composable
 import androidx.compose.runtime.remember
+import androidx.navigation.compose.composable
 import com.android.billingclient.api.ProductDetails
 
 fun NavGraphBuilder.aboutScreen(
@@ -29,12 +28,9 @@ fun NavGraphBuilder.aboutScreen(
 
     composable("about_screen") {
 
-        Log.d("TAG", ">>> About screen")
-
         val viewModel = hiltViewModel<AboutViewModel>()
         //  val homeViewModel =
         //     hiltViewModel<HomeViewModel>(remember { nav.getBackStackEntry(route = MAIN_GRAPH) })
-
 
         val context = LocalContext.current
         val versionName = stringResource(id = R.string.ver) + " " + context.getVersionName()

@@ -8,8 +8,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import com.android.billingclient.api.BillingFlowParams
 import com.aripuca.finhelper.extensions.launchEmail
 import com.aripuca.finhelper.extensions.navigationFlow
@@ -18,12 +24,11 @@ import com.aripuca.finhelper.ui.screens.about.aboutScreen
 import com.aripuca.finhelper.ui.screens.home.homeScreen
 import com.aripuca.finhelper.ui.screens.investment.help.investmentHelpScreen
 import com.aripuca.finhelper.ui.screens.investment.investmentScreen
+import com.aripuca.finhelper.ui.screens.mortgage.affordability.mortgageAffordabilityScreen
 import com.aripuca.finhelper.ui.screens.mortgage.help.mortgageHelpScreen
 import com.aripuca.finhelper.ui.screens.mortgage.mortgageScreen
 import com.aripuca.finhelper.ui.screens.my1stmillion.my1stMillionScreen
 import com.aripuca.finhelper.ui.theme.FinHelperTheme
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -50,7 +55,7 @@ class MainActivity : ComponentActivity() {
         setupInterstitialAds()
 
         setContent {
-            val navController = rememberAnimatedNavController()
+            val navController = rememberNavController()
 
             val purchasesList by mainViewModel.purchasesFlow.collectAsState()
 
@@ -60,93 +65,90 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            CompositionLocalProvider(
+            FinHelperTheme {
+                Surface {
+                    NavHost(
+                        navController = navController,
+                        startDestination = "home_screen",
+                    ) {
 
-            ) {
-                FinHelperTheme {
-                    Surface {
-                        AnimatedNavHost(
-                            navController = navController,
-                            startDestination = "home_screen",
+                        homeScreen(navController) {
+                            showInterstitialAdAndThenNavigate(
+                                nav = navController,
+                                interstitialAd = my1stMillionScreenInterstitialAd,
+                                adsRemoved = adsRemoved,
+                                route = "my1st_million_screen"
+                            )
+                        }
+
+                        navigationFlow(
+                            startDestination = "about_screen",
+                            route = "about_flow"
                         ) {
+                            aboutScreen(
+                                nav = navController,
+                                mainViewModel = mainViewModel,
+                                launchEmail = {
+                                    launchEmail(
+                                        emailAddress = getString(R.string.support_email),
+                                        subject = "Financial Helper Support Request",
+                                        body = ""
+                                    )
+                                },
+                                launchWeb = this@MainActivity::launchWeb,
+                                launchPurchaseFlow = {
+                                    val productDetailsParamsList = listOf(
+                                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                                            .setProductDetails(it)
+                                            .build()
+                                    )
+                                    val flowParams = BillingFlowParams.newBuilder()
+                                        .setProductDetailsParamsList(productDetailsParamsList)
+                                        .build()
+                                    mainViewModel.launchBillingFlow(
+                                        this@MainActivity,
+                                        flowParams
+                                    )
+                                }
+                            )
+                        }
 
-                            homeScreen(navController) {
+                        navigationFlow(
+                            startDestination = "mortgage_screen",
+                            route = "mortgage_flow"
+                        ) {
+                            mortgageScreen(navController, mainViewModel) {
                                 showInterstitialAdAndThenNavigate(
                                     nav = navController,
-                                    interstitialAd = my1stMillionScreenInterstitialAd,
+                                    interstitialAd = mortgageHelpScreenInterstitialAd,
                                     adsRemoved = adsRemoved,
-                                    route = "my1st_million_screen"
+                                    route = "mortgage_help_screen"
                                 )
                             }
+                            mortgageAffordabilityScreen(navController)
+                            mortgageHelpScreen(navController)
+                        }
 
-                            navigationFlow(
-                                startDestination = "about_screen",
-                                route = "about_flow"
-                            ) {
-                                aboutScreen(
-                                    nav = navController,
-                                    mainViewModel = mainViewModel,
-                                    launchEmail = {
-                                        launchEmail(
-                                            emailAddress = getString(R.string.support_email),
-                                            subject = "Financial Helper Support Request",
-                                            body = ""
-                                        )
-                                    },
-                                    launchWeb = this@MainActivity::launchWeb,
-                                    launchPurchaseFlow = {
-                                        val productDetailsParamsList = listOf(
-                                            BillingFlowParams.ProductDetailsParams.newBuilder()
-                                                .setProductDetails(it)
-                                                .build()
-                                        )
-                                        val flowParams = BillingFlowParams.newBuilder()
-                                            .setProductDetailsParamsList(productDetailsParamsList)
-                                            .build()
-                                        mainViewModel.launchBillingFlow(
-                                            this@MainActivity,
-                                            flowParams
-                                        )
-                                    }
+                        navigationFlow(
+                            startDestination = "investment_screen",
+                            route = "investment_flow"
+                        ) {
+                            investmentScreen(navController, mainViewModel) {
+                                showInterstitialAdAndThenNavigate(
+                                    navController,
+                                    interstitialAd = investmentHelpScreenInterstitialAd,
+                                    adsRemoved = adsRemoved,
+                                    route = "investment_help_screen"
                                 )
                             }
+                            investmentHelpScreen(navController)
+                        }
 
-                            navigationFlow(
-                                startDestination = "mortgage_screen",
-                                route = "mortgage_flow"
-                            ) {
-                                mortgageScreen(navController, mainViewModel) {
-                                    showInterstitialAdAndThenNavigate(
-                                        nav = navController,
-                                        interstitialAd = mortgageHelpScreenInterstitialAd,
-                                        adsRemoved = adsRemoved,
-                                        route = "mortgage_help_screen"
-                                    )
-                                }
-                                mortgageHelpScreen(navController)
-                            }
-
-                            navigationFlow(
-                                startDestination = "investment_screen",
-                                route = "investment_flow"
-                            ) {
-                                investmentScreen(navController, mainViewModel) {
-                                    showInterstitialAdAndThenNavigate(
-                                        navController,
-                                        interstitialAd = investmentHelpScreenInterstitialAd,
-                                        adsRemoved = adsRemoved,
-                                        route = "investment_help_screen"
-                                    )
-                                }
-                                investmentHelpScreen(navController)
-                            }
-
-                            navigationFlow(
-                                startDestination = "my1st_million_screen",
-                                route = "my1st_million_flow"
-                            ) {
-                                my1stMillionScreen(navController, mainViewModel)
-                            }
+                        navigationFlow(
+                            startDestination = "my1st_million_screen",
+                            route = "my1st_million_flow"
+                        ) {
+                            my1stMillionScreen(navController, mainViewModel)
                         }
                     }
                 }

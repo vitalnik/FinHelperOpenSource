@@ -4,13 +4,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import com.aripuca.finhelper.MainViewModel
 import com.aripuca.finhelper.services.billing.checkPurchases
-import com.google.accompanist.navigation.animation.composable
-import androidx.compose.runtime.remember
+import com.aripuca.finhelper.ui.screens.common.HistoryPanelEvents
 import com.aripuca.finhelper.ui.screens.common.HistoryPanelState
 
 fun NavGraphBuilder.mortgageScreen(
@@ -18,7 +19,6 @@ fun NavGraphBuilder.mortgageScreen(
     mainViewModel: MainViewModel,
     navigateToHelp: () -> Unit = {},
 ) {
-
     composable("mortgage_screen") {
 
         val viewModel = hiltViewModel<MortgageViewModel>()
@@ -56,52 +56,65 @@ fun NavGraphBuilder.mortgageScreen(
         val principalPercent by viewModel.principalPercent
 
         LaunchedEffect(key1 = true) {
-            viewModel.logScreenView()
-            viewModel.calculateSchedule()
+            with(viewModel) {
+                logScreenView()
+                loadHistorySelectedIndex()
+            }
         }
 
         LaunchedEffect(key1 = mortgageHistory, key2 = selectedHistoryItemIndex) {
             if (mortgageHistory.isNotEmpty()) {
                 viewModel.loadHistoryItem(mortgageHistory)
+            } else {
+                viewModel.loadLocallySaved()
             }
         }
 
         MortgageScreen(
-            adsRemoved = adsRemoved,
-            inputValid = inputValid,
-            payment = payment,
-            totalInterest = totalInterest,
-            totalPayments = totalPayments,
-            principalPercent = principalPercent.toFloat(),
-            principalAmount = principalAmount,
-            principalAmountInput = principalAmountInput,
-            onPrincipalAmountChanged = {
-                viewModel.updatePrincipalAmount(it)
-            },
-            interestRate = interestRateInput,
-            onInterestRateChanged = {
-                viewModel.updateInterestRate(it)
-            },
-            numberOfYears = numberOfYearsInput,
-            onNumberOfYearsChanged = {
-                viewModel.updateNumberOfYears(it)
-            },
-            paymentsPerYear = paymentsPerYearInput,
-            onPaymentsPerYearChanged = {
-                viewModel.updatePaymentsPerYear(it)
-            },
-            paymentsSchedule = paymentsSchedule,
-            yearSummary = yearSummary,
-            onHelpClick = {
-                navigateToHelp()
-            },
-            onBackPress = {
-                nav.popBackStack()
-            },
+            screenState = MortgageScreenState(
+                adsRemoved = adsRemoved,
+                inputValid = inputValid,
+                payment = payment,
+                totalInterest = totalInterest,
+                totalPayments = totalPayments,
+                principalPercent = principalPercent.toFloat(),
+                principalAmount = principalAmount,
+                principalAmountInput = principalAmountInput,
+                interestRate = interestRateInput,
+                numberOfYears = numberOfYearsInput,
+                paymentsPerYear = paymentsPerYearInput,
+                paymentsSchedule = paymentsSchedule,
+                yearSummary = yearSummary,
+            ),
+            screenEvents = MortgageScreenEvents(
+                onPrincipalAmountChanged = {
+                    viewModel.updatePrincipalAmount(it)
+                },
+                onInterestRateChanged = {
+                    viewModel.updateInterestRate(it)
+                },
+                onNumberOfYearsChanged = {
+                    viewModel.updateNumberOfYears(it)
+                },
+                onPaymentsPerYearChanged = {
+                    viewModel.updatePaymentsPerYear(it)
+                },
+                onHelpClick = {
+                    navigateToHelp()
+                },
+                onAffordabilityClicked = {
+                    nav.navigate("mortgage_affordability_screen")
+                },
+                onBackPress = {
+                    nav.popBackStack()
+                }
+            ),
             historyPanelState = HistoryPanelState(
                 selectedHistoryItemIndex = selectedHistoryItemIndex,
                 historyItemCount = mortgageHistory.count(),
                 saveHistoryItemEnabled = saveHistoryItemEnabled,
+            ),
+            historyPanelEvents = HistoryPanelEvents(
                 onAddHistoryItem = {
                     viewModel.addHistoryItem()
                 },

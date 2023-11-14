@@ -1,19 +1,19 @@
 package com.aripuca.finhelper.ui.screens.investment
 
-import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import com.aripuca.finhelper.MainViewModel
 import com.aripuca.finhelper.services.billing.checkPurchases
-import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getFrequency
-import com.google.accompanist.navigation.animation.composable
-import androidx.compose.runtime.remember
+import com.aripuca.finhelper.ui.screens.common.HistoryPanelEvents
 import com.aripuca.finhelper.ui.screens.common.HistoryPanelState
+import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getFrequency
 
 fun NavGraphBuilder.investmentScreen(
     nav: NavController,
@@ -57,13 +57,15 @@ fun NavGraphBuilder.investmentScreen(
 
         LaunchedEffect(key1 = true) {
             viewModel.logScreenView()
-            viewModel.calculateInvestment()
         }
 
         val historyPanelState = HistoryPanelState(
             selectedHistoryItemIndex = selectedHistoryItemIndex,
             historyItemCount = investmentHistory.count(),
             saveHistoryItemEnabled = saveHistoryItemEnabled,
+        )
+
+        val historyPanelEvents = HistoryPanelEvents(
             onAddHistoryItem = {
                 viewModel.addHistoryItem()
             },
@@ -84,6 +86,8 @@ fun NavGraphBuilder.investmentScreen(
         LaunchedEffect(key1 = investmentHistory, key2 = selectedHistoryItemIndex) {
             if (investmentHistory.isNotEmpty()) {
                 viewModel.loadHistoryItem(investmentHistory)
+            } else {
+                viewModel.loadLocallySaved()
             }
         }
 
@@ -122,6 +126,7 @@ fun NavGraphBuilder.investmentScreen(
                 nav.popBackStack()
             },
             historyPanelState = historyPanelState,
+            historyPanelEvents = historyPanelEvents
         )
     }
 }

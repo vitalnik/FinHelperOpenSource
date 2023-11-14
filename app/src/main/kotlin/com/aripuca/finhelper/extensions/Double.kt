@@ -1,7 +1,6 @@
 package com.aripuca.finhelper.extensions
 
 import java.text.NumberFormat
-import java.util.*
 import kotlin.math.abs
 
 fun Double.roundTo(fractionDigits: Int): String {

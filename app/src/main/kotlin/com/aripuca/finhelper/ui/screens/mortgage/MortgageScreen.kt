@@ -1,7 +1,7 @@
 package com.aripuca.finhelper.ui.screens.mortgage
 
+import LocalDimensions
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,7 +18,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +33,9 @@ import com.aripuca.finhelper.ui.components.text.HeaderText
 import com.aripuca.finhelper.ui.preview.ScheduleItemsProvider
 import com.aripuca.finhelper.ui.preview.YearSummaryProvider
 import com.aripuca.finhelper.ui.screens.common.HistoryPanel
+import com.aripuca.finhelper.ui.screens.common.HistoryPanelEvents
 import com.aripuca.finhelper.ui.screens.common.HistoryPanelState
+import com.aripuca.finhelper.ui.components.input.TextFieldRow
 import com.aripuca.finhelper.ui.screens.common.TopAppBarRow
 import com.aripuca.finhelper.ui.theme.*
 import com.himanshoe.charty.bar.StackedBarChart
@@ -43,30 +43,13 @@ import com.himanshoe.charty.bar.config.BarConfigDefaults
 import com.himanshoe.charty.bar.model.StackedBarData
 import com.himanshoe.charty.common.axis.AxisConfigDefaults
 
-
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MortgageScreen(
-    adsRemoved: Boolean,
-    inputValid: Boolean,
-    payment: String,
-    totalInterest: String,
-    totalPayments: String,
-    principalPercent: Float,
-    principalAmount: String,
-    principalAmountInput: String,
-    onPrincipalAmountChanged: (String) -> Unit = {},
-    interestRate: String,
-    onInterestRateChanged: (String) -> Unit = {},
-    numberOfYears: String,
-    onNumberOfYearsChanged: (String) -> Unit = {},
-    paymentsPerYear: String,
-    onPaymentsPerYearChanged: (String) -> Unit = {},
-    paymentsSchedule: List<ScheduleItem> = listOf(),
-    yearSummary: List<ScheduleItem> = listOf(),
-    onHelpClick: () -> Unit = {},
-    onBackPress: () -> Unit = {},
-    historyPanelState: HistoryPanelState = HistoryPanelState(),
+    screenState: MortgageScreenState,
+    screenEvents: MortgageScreenEvents,
+    historyPanelState: HistoryPanelState,
+    historyPanelEvents: HistoryPanelEvents,
 ) {
 
     val listState = rememberLazyListState()
@@ -77,11 +60,11 @@ fun MortgageScreen(
             TopAppBarRow(
                 title = stringResource(id = R.string.mortgage_calculator),
                 helpContentDescription = stringResource(id = R.string.mortgage_help),
-                onHelpClick = onHelpClick
+                onHelpClick = screenEvents.onHelpClick
             )
         }, navigationIcon = {
             NavigationIcon {
-                onBackPress()
+                screenEvents.onBackPress()
             }
         }, scrollBehavior = scrollBehavior
         )
@@ -98,35 +81,31 @@ fun MortgageScreen(
                 item {
                     VerticalSpacer()
                     InputFields(
-                        principalAmountInput,
-                        onPrincipalAmountChanged,
-                        interestRate,
-                        onInterestRateChanged,
-                        numberOfYears,
-                        onNumberOfYearsChanged,
-                        paymentsPerYear,
-                        onPaymentsPerYearChanged
+                        state = screenState.toInputFieldState(),
+                        events = screenEvents.toInputFieldEvents()
                     )
+
+                    Centered {
+                        VerticalSpacer(4.dp)
+                        TextButton(onClick = screenEvents.onAffordabilityClicked) {
+                            Text(text = stringResource(id = R.string.how_much_can_i_afford))
+                        }
+                        VerticalSpacer(4.dp)
+                    }
                 }
 
                 item {
                     HistoryPanel(
-                        selectedHistoryItemIndex = historyPanelState.selectedHistoryItemIndex,
-                        historyItemCount = historyPanelState.historyItemCount,
-                        saveEnabled = historyPanelState.saveHistoryItemEnabled,
-                        onAddClick = historyPanelState.onAddHistoryItem,
-                        onSaveClick = historyPanelState.onSaveHistoryItem,
-                        onDeleteClick = historyPanelState.onDeleteHistoryItem,
-                        onPrevClick = historyPanelState.onLoadPrevHistoryItem,
-                        onNextClick = historyPanelState.onLoadNextHistoryItem,
+                        state = historyPanelState,
+                        events = historyPanelEvents
                     )
                 }
 
                 item {
                     AnimatedVisibility(
-                        visible = inputValid
+                        visible = screenState.inputValid
                     ) {
-                        MortgageChart(yearSummary)
+                        MortgageChart(screenState.yearSummary)
                     }
                 }
 
@@ -135,33 +114,38 @@ fun MortgageScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(color = MaterialTheme.colorScheme.surface)
-                            .padding(horizontal = 16.dp)
+                            .padding(horizontal = LocalDimensions.current.default)
                     ) {
 
-                        CalculatedFields(
-                            principalPercent, payment, principalAmount, totalInterest, totalPayments
-                        )
+                        if (screenState.inputValid) {
 
-                        if (inputValid) {
+                            CalculatedFields(
+                                screenState.principalPercent,
+                                screenState.payment,
+                                screenState.principalAmount,
+                                screenState.totalInterest,
+                                screenState.totalPayments
+                            )
+
                             HeaderText(text = stringResource(R.string.payments_schedule))
                             PaymentsScheduleHeader()
                         }
                     }
                 }
 
-                if (inputValid) {
-                    itemsIndexed(items = paymentsSchedule, key = { index, _ ->
+                if (screenState.inputValid) {
+                    itemsIndexed(items = screenState.paymentsSchedule, key = { index, _ ->
                         index
                     }) { index, item ->
 
-                        val yearIndex = (index / paymentsPerYear.toInt())
+                        val yearIndex = (index / screenState.paymentsPerYear.toInt())
 
                         PaymentsScheduleRow(
                             index = index,
                             item = item,
                         )
 
-                        if ((index + 1) % (paymentsPerYear.toIntOrNull() ?: 1) == 0) {
+                        if ((index + 1) % (screenState.paymentsPerYear.toIntOrNull() ?: 1) == 0) {
                             Row(
                                 modifier = Modifier
                                     .padding(horizontal = 16.dp)
@@ -180,19 +164,19 @@ fun MortgageScreen(
                                 )
                                 HorizontalSpacer(8.dp)
                                 TableCell(
-                                    text = yearSummary[yearIndex].principalPart.toCurrency(),
+                                    text = screenState.yearSummary[yearIndex].principalPart.toCurrency(),
                                     color = if (isSystemInDarkTheme()) progress1Dark else progress1Light,
                                     style = TextStyle(fontWeight = FontWeight.Bold)
                                 )
                                 HorizontalSpacer(8.dp)
                                 TableCell(
-                                    text = yearSummary[yearIndex].interestPart.toCurrency(),
+                                    text = screenState.yearSummary[yearIndex].interestPart.toCurrency(),
                                     style = TextStyle(fontWeight = FontWeight.Bold),
                                     color = if (isSystemInDarkTheme()) interestDark else interestLight,
                                 )
                                 HorizontalSpacer(8.dp)
                                 TableCell(
-                                    text = yearSummary[yearIndex].loanRemainder.toCurrency(),
+                                    text = screenState.yearSummary[yearIndex].loanRemainder.toCurrency(),
                                     color = if (isSystemInDarkTheme()) progressOutlineDark else progressOutlineLight,
                                     style = TextStyle(fontWeight = FontWeight.Bold)
                                 )
@@ -207,7 +191,7 @@ fun MortgageScreen(
                 }
             }
 
-            if (!adsRemoved && !BuildConfig.DEBUG) {
+            if (!screenState.adsRemoved && !BuildConfig.DEBUG) {
                 AdMobView(adUnitId = stringResource(id = R.string.mortgage_screen_banner_ad_unit_id))
             }
         }
@@ -229,7 +213,7 @@ private fun MortgageChart(yearSummary: List<ScheduleItem>) {
 
     Column {
 
-        VerticalSpacer(8.dp)
+        VerticalSpacer()
 
         Row(
             modifier = Modifier
@@ -280,14 +264,8 @@ private fun MortgageChart(yearSummary: List<ScheduleItem>) {
 
 @Composable
 private fun InputFields(
-    principalAmountInput: String,
-    onPrincipalAmountChanged: (String) -> Unit,
-    interestRate: String,
-    onInterestRateChanged: (String) -> Unit,
-    numberOfYears: String,
-    onNumberOfYearsChanged: (String) -> Unit,
-    paymentsPerYear: String,
-    onPaymentsPerYearChanged: (String) -> Unit
+    state: InputFieldsState,
+    events: InputFieldsEvents,
 ) {
     Row(
         modifier = Modifier
@@ -296,15 +274,15 @@ private fun InputFields(
     ) {
         TextFieldRow(
             label = stringResource(R.string.principal_amount_label),
-            value = principalAmountInput,
-            onValueChanged = onPrincipalAmountChanged,
+            value = state.principalAmountInput,
+            onValueChanged = events.onPrincipalAmountChanged,
             testTag = "principal_amount_input",
         )
         HorizontalSpacer()
         TextFieldRow(
             label = "Interest rate, %",
-            value = interestRate,
-            onValueChanged = onInterestRateChanged,
+            value = state.interestRate,
+            onValueChanged = events.onInterestRateChanged,
             testTag = "interest_rate_input",
         )
     }
@@ -318,15 +296,15 @@ private fun InputFields(
     ) {
         TextFieldRow(
             label = stringResource(R.string.amortization_years),
-            value = numberOfYears,
-            onValueChanged = onNumberOfYearsChanged,
+            value = state.numberOfYears,
+            onValueChanged = events.onNumberOfYearsChanged,
             testTag = "number_of_years_input",
         )
         HorizontalSpacer()
         TextFieldRow(
             label = stringResource(R.string.payments_per_year),
-            value = paymentsPerYear,
-            onValueChanged = onPaymentsPerYearChanged,
+            value = state.paymentsPerYear,
+            onValueChanged = events.onPaymentsPerYearChanged,
             testTag = "payments_per_year_input",
         )
     }
@@ -415,53 +393,32 @@ private fun PaymentsScheduleHeader() {
     Divider()
 }
 
-@Composable
-private fun RowScope.TextFieldRow(
-    label: String,
-    value: String,
-    onValueChanged: (String) -> Unit,
-    enabled: Boolean = true,
-    testTag: String = ""
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = {
-            onValueChanged(it)
-        },
-        modifier = Modifier
-            .weight(1f, true)
-            .testTag(testTag),
-        label = { Text(text = label) },
-        enabled = enabled,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number,
-        ),
-        singleLine = true,
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
+private fun HomeScreenPreview() {
     FinHelperTheme {
         MortgageScreen(
-            adsRemoved = false,
-            inputValid = true,
-            payment = "$500.00",
-            totalInterest = "$1000.00",
-            totalPayments = "$100000.00",
-            principalPercent = 50f,
-            principalAmount = "$500000.00",
-            principalAmountInput = "500000.00",
-            interestRate = "2.5",
-            numberOfYears = "25",
-            paymentsPerYear = "12",
-            paymentsSchedule = ScheduleItemsProvider().values.first(),
-            yearSummary = YearSummaryProvider().values.first(),
+            screenState = MortgageScreenState(
+                adsRemoved = false,
+                inputValid = true,
+                payment = "$500.00",
+                totalInterest = "$1000.00",
+                totalPayments = "$100000.00",
+                principalPercent = 50f,
+                principalAmount = "$500000.00",
+                principalAmountInput = "500000.00",
+                interestRate = "2.5",
+                numberOfYears = "25",
+                paymentsPerYear = "12",
+                paymentsSchedule = ScheduleItemsProvider().values.first(),
+                yearSummary = YearSummaryProvider().values.first()
+            ),
+            screenEvents = MortgageScreenEvents(),
             historyPanelState = HistoryPanelState(
                 selectedHistoryItemIndex = 0,
                 historyItemCount = 2,
-            )
+            ),
+            historyPanelEvents = HistoryPanelEvents()
         )
     }
 }

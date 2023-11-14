@@ -1,6 +1,8 @@
 package com.aripuca.finhelper.ui.screens.mortgage
 
 import android.util.Log
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,14 +22,17 @@ import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("TooManyFunctions")
 class MortgageViewModel @Inject constructor(
+    private val mortgageCalculator: MortgageCalculator,
     private val localStorage: LocalStorage,
     private val analyticsClient: AnalyticsClient,
     private val appDatabase: AppDatabase
 ) : ViewModel() {
 
     val mortgageHistoryFlow = appDatabase.mortgageHistoryDao().getAllAsFlow()
-    val selectedHistoryItemIndex = mutableStateOf(localStorage.getMortgageHistorySelectedIndex(0))
+    val selectedHistoryItemIndex = mutableIntStateOf(0)
+
     val saveHistoryItemEnabled = mutableStateOf(false)
     val inputValid = mutableStateOf(false)
 
@@ -41,10 +46,15 @@ class MortgageViewModel @Inject constructor(
     val numberOfYearsInput = mutableStateOf(localStorage.getMortgageNumberOfYears("25"))
     val paymentsPerYearInput = mutableStateOf(localStorage.getMortgagePaymentsPerYear("12"))
 
-    val principalPercent = mutableStateOf(50.0)
+    val principalPercent = mutableDoubleStateOf(50.0)
 
     val paymentsSchedule = mutableStateOf<List<ScheduleItem>>(listOf())
     val yearSummary = mutableStateOf<List<ScheduleItem>>(listOf())
+
+    fun loadHistorySelectedIndex() {
+        selectedHistoryItemIndex.intValue = localStorage.getMortgageHistorySelectedIndex(0)
+    }
+
     fun logScreenView() {
         analyticsClient.log(FirebaseAnalyticsClient.MORTGAGE_SCREEN_VIEW)
     }
@@ -69,7 +79,7 @@ class MortgageViewModel @Inject constructor(
         return value.checkRange(max = 100.0)
     }
 
-    fun calculateSchedule() {
+    private fun calculateMortgage() {
 
         validateRequiredFields()
 
@@ -78,30 +88,25 @@ class MortgageViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        val results = mortgageCalculator.calculate(
+            loanAmount = principalAmountInput.value.toDoubleOrNull() ?: 0.0,
+            interestRate = interestRateInput.value.toDoubleOrNull() ?: 0.0,
+            numberOfYears = numberOfYearsInput.value.toIntOrNull() ?: 0,
+            paymentsPerYear = paymentsPerYearInput.value.toIntOrNull() ?: 0,
+        )
 
-            val mortgageCalculator = MortgageCalculator(
-                loanAmount = principalAmountInput.value.toDoubleOrNull() ?: 0.0,
-                interestRate = interestRateInput.value.toDoubleOrNull() ?: 0.0,
-                numberOfYears = numberOfYearsInput.value.toIntOrNull() ?: 0,
-                paymentsPerYear = paymentsPerYearInput.value.toIntOrNull() ?: 0,
-            )
+        paymentState.value = results.paymentPerPeriod.toCurrency()
 
-            mortgageCalculator.calculate()
+        totalInterestState.value = results.totalInterest.toCurrency()
+        totalPaymentsState.value = results.totalPayments.toCurrency()
+        principalAmountState.value =
+            (principalAmountInput.value.toDoubleOrNull() ?: 0.0).toCurrency()
+        principalPercent.doubleValue = results.principalPercent
 
-            paymentState.value = mortgageCalculator.paymentPerPeriod.toCurrency()
+        paymentsSchedule.value = results.paymentsSchedule
+        yearSummary.value = results.yearSummary
 
-            totalInterestState.value = mortgageCalculator.totalInterest.toCurrency()
-            totalPaymentsState.value = mortgageCalculator.totalPayments.toCurrency()
-            principalAmountState.value =
-                (principalAmountInput.value.toDoubleOrNull() ?: 0.0).toCurrency()
-            principalPercent.value = mortgageCalculator.principalPercent
-
-            paymentsSchedule.value = mortgageCalculator.paymentsSchedule
-            yearSummary.value = mortgageCalculator.yearSummary
-
-            saveUserInputInLocalStorage()
-        }
+        saveUserInputInLocalStorage()
     }
 
     private fun saveUserInputInLocalStorage() {
@@ -117,7 +122,7 @@ class MortgageViewModel @Inject constructor(
         localStorage.saveString(LocalStorage.MORTGAGE_PAYMENTS_PER_YEAR, paymentsPerYearInput.value)
         localStorage.saveInt(
             LocalStorage.MORTGAGE_HISTORY_SELECTED_INDEX,
-            selectedHistoryItemIndex.value
+            selectedHistoryItemIndex.intValue
         )
     }
 
@@ -137,7 +142,7 @@ class MortgageViewModel @Inject constructor(
 
             val mortgageHistory: List<MortgageHistoryEntity> =
                 appDatabase.mortgageHistoryDao().getAll()
-            selectedHistoryItemIndex.value = mortgageHistory.count() - 1
+            selectedHistoryItemIndex.intValue = mortgageHistory.count() - 1
 
             analyticsClient.log(FirebaseAnalyticsClient.MORTGAGE_HISTORY_ADDED)
         }
@@ -148,9 +153,9 @@ class MortgageViewModel @Inject constructor(
             val mortgageHistory: List<MortgageHistoryEntity> =
                 appDatabase.mortgageHistoryDao().getAll()
 
-            if (mortgageHistory.isNotEmpty() && selectedHistoryItemIndex.value < mortgageHistory.count()) {
+            if (mortgageHistory.isNotEmpty() && selectedHistoryItemIndex.intValue < mortgageHistory.count()) {
 
-                val selectedHistoryItem = mortgageHistory[selectedHistoryItemIndex.value].copy()
+                val selectedHistoryItem = mortgageHistory[selectedHistoryItemIndex.intValue].copy()
 
                 val mortgageHistoryEntity = MortgageHistoryEntity(
                     id = selectedHistoryItem.id,
@@ -175,12 +180,12 @@ class MortgageViewModel @Inject constructor(
             val historyList: List<MortgageHistoryEntity> =
                 appDatabase.mortgageHistoryDao().getAll()
 
-            if (historyList.isNotEmpty() && selectedHistoryItemIndex.value < historyList.count()) {
+            if (historyList.isNotEmpty() && selectedHistoryItemIndex.intValue < historyList.count()) {
 
-                val selectedHistoryItem = historyList[selectedHistoryItemIndex.value]
+                val selectedHistoryItem = historyList[selectedHistoryItemIndex.intValue]
                 appDatabase.mortgageHistoryDao().deleteById(selectedHistoryItem.id)
 
-                if (selectedHistoryItemIndex.value == historyList.count() - 1) {
+                if (selectedHistoryItemIndex.intValue == historyList.count() - 1) {
                     decrementSelectedHistoryItemIndex(logAnalytics = false)
                 }
 
@@ -195,11 +200,11 @@ class MortgageViewModel @Inject constructor(
             val mortgageHistory: List<MortgageHistoryEntity> =
                 appDatabase.mortgageHistoryDao().getAll()
 
-            if (selectedHistoryItemIndex.value > 0 && mortgageHistory.isNotEmpty()) {
-                selectedHistoryItemIndex.value--
+            if (selectedHistoryItemIndex.intValue > 0 && mortgageHistory.isNotEmpty()) {
+                selectedHistoryItemIndex.intValue--
             } else {
-                if (selectedHistoryItemIndex.value == 0 && mortgageHistory.isNotEmpty()) {
-                    selectedHistoryItemIndex.value = mortgageHistory.count() - 1
+                if (selectedHistoryItemIndex.intValue == 0 && mortgageHistory.isNotEmpty()) {
+                    selectedHistoryItemIndex.intValue = mortgageHistory.count() - 1
                 }
             }
 
@@ -213,27 +218,31 @@ class MortgageViewModel @Inject constructor(
         viewModelScope.launch {
             val mortgageHistory: List<MortgageHistoryEntity> =
                 appDatabase.mortgageHistoryDao().getAll()
-            if (selectedHistoryItemIndex.value < mortgageHistory.count() - 1) {
-                selectedHistoryItemIndex.value++
+            if (selectedHistoryItemIndex.intValue < mortgageHistory.count() - 1) {
+                selectedHistoryItemIndex.intValue++
             } else {
-                if (selectedHistoryItemIndex.value == mortgageHistory.count() - 1) {
-                    selectedHistoryItemIndex.value = 0
+                if (selectedHistoryItemIndex.intValue == mortgageHistory.count() - 1) {
+                    selectedHistoryItemIndex.intValue = 0
                 }
             }
             analyticsClient.log(FirebaseAnalyticsClient.MORTGAGE_HISTORY_SCROLL)
         }
     }
 
+    fun loadLocallySaved() {
+        calculateMortgage()
+    }
+
     fun loadHistoryItem(mortgageHistory: List<MortgageHistoryEntity>) {
-        if (mortgageHistory.isNotEmpty() && selectedHistoryItemIndex.value < mortgageHistory.count()) {
-            val selectedHistoryItem = mortgageHistory[selectedHistoryItemIndex.value]
+        if (mortgageHistory.isNotEmpty() && selectedHistoryItemIndex.intValue < mortgageHistory.count()) {
+            val selectedHistoryItem = mortgageHistory[selectedHistoryItemIndex.intValue]
             principalAmountInput.value = selectedHistoryItem.principalAmount
             interestRateInput.value = selectedHistoryItem.interestRate
             numberOfYearsInput.value = selectedHistoryItem.numberOfYears
             paymentsPerYearInput.value = selectedHistoryItem.paymentsPerYear
 
             setSaveHistoryItemEnabled()
-            calculateSchedule()
+            calculateMortgage()
         }
     }
 
@@ -246,7 +255,7 @@ class MortgageViewModel @Inject constructor(
         if (validatePrincipalAmount(value)) {
             principalAmountInput.value = value
             setSaveHistoryItemEnabled()
-            calculateSchedule()
+            calculateMortgage()
         }
     }
 
@@ -259,7 +268,7 @@ class MortgageViewModel @Inject constructor(
         if (validateInterestRate(value)) {
             interestRateInput.value = value
             setSaveHistoryItemEnabled()
-            calculateSchedule()
+            calculateMortgage()
         }
     }
 
@@ -272,7 +281,7 @@ class MortgageViewModel @Inject constructor(
         if (validateNumberOfYears(value)) {
             numberOfYearsInput.value = value
             setSaveHistoryItemEnabled()
-            calculateSchedule()
+            calculateMortgage()
         }
     }
 
@@ -285,7 +294,7 @@ class MortgageViewModel @Inject constructor(
         if (validatePaymentsPerYear(value)) {
             paymentsPerYearInput.value = value
             setSaveHistoryItemEnabled()
-            calculateSchedule()
+            calculateMortgage()
         }
     }
 
@@ -296,7 +305,7 @@ class MortgageViewModel @Inject constructor(
                 appDatabase.mortgageHistoryDao().getAll()
 
             if (mortgageHistory.isNotEmpty()) {
-                val selectedHistoryItem = mortgageHistory[selectedHistoryItemIndex.value]
+                val selectedHistoryItem = mortgageHistory[selectedHistoryItemIndex.intValue]
                 saveHistoryItemEnabled.value =
                     selectedHistoryItem.principalAmount != principalAmountInput.value ||
                             selectedHistoryItem.interestRate != interestRateInput.value ||
@@ -307,7 +316,7 @@ class MortgageViewModel @Inject constructor(
 
     }
 
-    fun validateRequiredFields() {
+    private fun validateRequiredFields() {
         inputValid.value =
             !(principalAmountInput.value.isEmpty() || (principalAmountInput.value.toDoubleOrNull()
                 ?: 0.0) == 0.0 ||

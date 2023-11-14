@@ -1,7 +1,7 @@
 package com.aripuca.finhelper.calculations
 
+import javax.inject.Inject
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.math.pow
 
 data class ScheduleItem(
@@ -10,21 +10,23 @@ data class ScheduleItem(
     val loanRemainder: Double
 )
 
-class MortgageCalculator(
-    val loanAmount: Double,
-    val interestRate: Double,
-    val numberOfYears: Int,
-    val paymentsPerYear: Int,
-) {
+data class MortgageCalculationResults(
+    var totalInterest: Double = 0.0,
+    var totalPayments: Double = 0.0,
+    var paymentPerPeriod: Double = 0.0,
+    var principalPercent: Double = 0.0,
+    var paymentsSchedule: MutableList<ScheduleItem> = mutableListOf(),
+    var yearSummary: MutableList<ScheduleItem> = mutableListOf(),
+)
 
-    var totalInterest: Double = 0.0
-    var totalPayments: Double = 0.0
-    var paymentPerPeriod: Double = 0.0
-    var principalPercent: Double = 0.0
-    var paymentsSchedule: MutableList<ScheduleItem> = mutableListOf()
-    var yearSummary: MutableList<ScheduleItem> = mutableListOf()
+class MortgageCalculator @Inject constructor() {
 
-    private fun calculatePaymentPerPeriod(): Double {
+    private fun calculatePaymentPerPeriod(
+        loanAmount: Double,
+        interestRate: Double,
+        numberOfYears: Int,
+        paymentsPerYear: Int,
+    ): Double {
         val periodInterestRate = interestRate / 100 / paymentsPerYear
         val numberOfPayments = paymentsPerYear * numberOfYears
 
@@ -39,18 +41,23 @@ class MortgageCalculator(
         return result
     }
 
-    fun calculate() {
+    fun calculate(
+        loanAmount: Double,
+        interestRate: Double,
+        numberOfYears: Int,
+        paymentsPerYear: Int,
+    ): MortgageCalculationResults {
 
         if (loanAmount == 0.0 || interestRate == 0.0 || numberOfYears == 0 || paymentsPerYear == 0) {
-            paymentPerPeriod = 0.0
-            totalPayments = 0.0
-            totalInterest = 0.0
-            paymentsSchedule.clear()
-            yearSummary.clear()
-            return
+            return MortgageCalculationResults()
         }
 
-        paymentPerPeriod = calculatePaymentPerPeriod()
+        var totalInterest = 0.0
+        var totalPayments = 0.0
+        var principalPercent = 0.0
+        var paymentPerPeriod = 0.0
+        val paymentsSchedule = mutableListOf<ScheduleItem>()
+        val yearSummary = mutableListOf<ScheduleItem>()
 
         val periodInterestRate = interestRate / 100 / paymentsPerYear
         var loanRemainder = loanAmount
@@ -58,6 +65,13 @@ class MortgageCalculator(
 
         var yearInterest = 0.0
         var yearPrincipal = 0.0
+
+        paymentPerPeriod = calculatePaymentPerPeriod(
+            loanAmount = loanAmount,
+            interestRate = interestRate,
+            numberOfYears = numberOfYears,
+            paymentsPerYear = paymentsPerYear,
+        )
 
         repeat(numberOfPayments) { paymentIndex ->
             val interestPart = loanRemainder * periodInterestRate
@@ -96,5 +110,13 @@ class MortgageCalculator(
             0.0
         }
 
+        return MortgageCalculationResults(
+            totalInterest = totalInterest,
+            totalPayments = totalPayments,
+            paymentPerPeriod = paymentPerPeriod,
+            principalPercent = principalPercent,
+            paymentsSchedule = paymentsSchedule,
+            yearSummary = yearSummary,
+        )
     }
 }

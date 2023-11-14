@@ -6,9 +6,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
 import com.aripuca.finhelper.R
 import com.aripuca.finhelper.extensions.getVersionName
-import com.google.accompanist.navigation.animation.composable
 
 fun NavGraphBuilder.homeScreen(
     navController: NavHostController,

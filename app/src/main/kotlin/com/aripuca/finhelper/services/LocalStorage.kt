@@ -70,6 +70,22 @@ class LocalStorage @Inject constructor(
     )
 
     //--------------------------------------------------------------------------
+    fun getAffordabilityMonthlyIncome(defaultValue: String): String =
+        getNonEmptyString(AFFORDABILITY_MONTHLY_INCOME, defaultValue)
+
+    fun getAffordabilityMonthlyDebtPayment(defaultValue: String): String =
+        getNonEmptyString(AFFORDABILITY_MONTHLY_DEBT_PAYMENT, defaultValue)
+
+    fun getAffordabilityDownPayment(defaultValue: String): String =
+        getNonEmptyString(AFFORDABILITY_DOWN_PAYMENT, defaultValue)
+
+    fun getAffordabilityInterestRate(defaultValue: String): String =
+        getNonEmptyString(AFFORDABILITY_INTEREST_RATE, defaultValue)
+
+    fun getAffordabilityNumberOfYears(defaultValue: String): String =
+        getNonEmptyString(AFFORDABILITY_NUMBER_OF_YEARS, defaultValue)
+
+    //--------------------------------------------------------------------------
 
     fun saveString(key: String, value: String) {
         preferences.edit().putString(key, value).apply()
@@ -121,5 +137,10 @@ class LocalStorage @Inject constructor(
         const val GOAL_REGULAR_ADDITION_FREQUENCY = "GOAL_REGULAR_ADDITION_FREQUENCY"
         const val GOAL_INTEREST_RATE = "GOAL_INTEREST_RATE"
 
+        const val AFFORDABILITY_MONTHLY_INCOME = "AFFORDABILITY_MONTHLY_INCOME"
+        const val AFFORDABILITY_MONTHLY_DEBT_PAYMENT = "AFFORDABILITY_MONTHLY_DEBT_PAYMENT"
+        const val AFFORDABILITY_DOWN_PAYMENT = "AFFORDABILITY_DOWN_PAYMENT"
+        const val AFFORDABILITY_INTEREST_RATE = "AFFORDABILITY_INTEREST_RATE"
+        const val AFFORDABILITY_NUMBER_OF_YEARS = "AFFORDABILITY_NUMBER_OF_YEARS"
     }
 }

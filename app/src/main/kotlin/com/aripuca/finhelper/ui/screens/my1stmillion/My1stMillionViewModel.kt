@@ -1,5 +1,7 @@
 package com.aripuca.finhelper.ui.screens.my1stmillion
 
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,11 +17,12 @@ import com.aripuca.finhelper.services.history.InvestmentHistoryEntity
 import com.aripuca.finhelper.ui.screens.investment.Frequency
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
 class My1stMillionViewModel @Inject constructor(
+    private val goalCalculator: GoalCalculator,
     private val localStorage: LocalStorage,
     private val analyticsClient: AnalyticsClient,
     private val appDatabase: AppDatabase,
@@ -31,7 +34,7 @@ class My1stMillionViewModel @Inject constructor(
 
     // number of time periods elapsed
     val regularContributionInput = mutableStateOf(localStorage.getGoalRegularAddition("1200"))
-    val regularAdditionFrequencyInput = mutableStateOf(
+    val regularAdditionFrequencyInput = mutableIntStateOf(
         localStorage.getGoalRegularAdditionFrequency(
             Frequency.WEEKLY.value
         )
@@ -40,44 +43,39 @@ class My1stMillionViewModel @Inject constructor(
     // calculated fields
     val totalInvestment = mutableStateOf("")
     val totalInterestEarned = mutableStateOf("")
-    val totalValue = mutableStateOf("")
+    private val totalValue = mutableStateOf("")
 
-    val interestRate = mutableStateOf(50.0)
+    val interestRate = mutableDoubleStateOf(50.0)
     val yearsToGrow = mutableStateOf("100")
 
     fun logScreenView() {
         analyticsClient.log(FirebaseAnalyticsClient.MY1ST_MILLION_SCREEN_VIEW)
     }
 
-    fun logOpenInInvestments() {
-        analyticsClient.log(FirebaseAnalyticsClient.MY1ST_MILLION_OPEN_IN_INVESTMENTS_CLICK)
-    }
-
     fun calculateInvestment() {
 
         viewModelScope.launch {
 
-            val calculator = GoalCalculator(
+            val result = goalCalculator.calculate(
                 initialPrincipalBalance = initialInvestmentInput.value.toDoubleOrNull() ?: 0.0,
                 regularAddition = regularContributionInput.value.toDoubleOrNull() ?: 0.0,
-                regularAdditionFrequency = regularAdditionFrequencyInput.value.toDouble(),
+                regularAdditionFrequency = regularAdditionFrequencyInput.intValue.toDouble(),
                 interestRate = interestRateInput.value.toDoubleOrNull() ?: 0.0,
-                numberOfTimesInterestApplied = regularAdditionFrequencyInput.value.toDouble(),
+                numberOfTimesInterestApplied = regularAdditionFrequencyInput.intValue.toDouble(),
                 goalAmount = 1_000_000.0
             )
 
-            calculator.calculate()
 
-            totalValue.value = calculator.totalValue.toCurrency()
-            totalInterestEarned.value = calculator.totalInterestEarned.toCurrency()
-            totalInvestment.value = calculator.totalInvestment.toCurrency()
-            yearsToGrow.value = calculator.yearsToGrow.toString()
+            totalValue.value = result.totalValue.toCurrency()
+            totalInterestEarned.value = result.totalInterestEarned.toCurrency()
+            totalInvestment.value = result.totalInvestment.toCurrency()
+            yearsToGrow.value = result.yearsToGrow.toString()
 
-            saveData()
+            saveInputInLocalStorage()
         }
     }
 
-    private fun saveData() {
+    private fun saveInputInLocalStorage() {
         localStorage.saveString(
             LocalStorage.GOAL_INITIAL_BALANCE, initialInvestmentInput.value
         )
@@ -88,7 +86,7 @@ class My1stMillionViewModel @Inject constructor(
         localStorage.saveString(LocalStorage.GOAL_INTEREST_RATE, interestRateInput.value)
         localStorage.saveString(
             LocalStorage.GOAL_REGULAR_ADDITION_FREQUENCY,
-            regularAdditionFrequencyInput.value.toString()
+            regularAdditionFrequencyInput.intValue.toString()
         )
     }
 
@@ -129,11 +127,14 @@ class My1stMillionViewModel @Inject constructor(
     }
 
     fun updateRegularAdditionFrequency(frequency: Frequency) {
-        regularAdditionFrequencyInput.value = frequency.value
+        regularAdditionFrequencyInput.intValue = frequency.value
         calculateInvestment()
     }
 
     fun openInInvestments(callback: () -> Unit = {}) {
+
+        analyticsClient.log(FirebaseAnalyticsClient.MY1ST_MILLION_OPEN_IN_INVESTMENTS_CLICK)
+
         viewModelScope.launch {
             val historyEntity = InvestmentHistoryEntity(
                 title = "My 1st Million history item",
@@ -141,14 +142,19 @@ class My1stMillionViewModel @Inject constructor(
                 interestRate = interestRateInput.value,
                 numberOfYears = yearsToGrow.value,
                 regularContribution = regularContributionInput.value,
-                contributionFrequency = regularAdditionFrequencyInput.value.toString(),
+                contributionFrequency = regularAdditionFrequencyInput.intValue.toString(),
                 createdAt = Date().toIsoString(),
                 updatedAt = Date().toIsoString(),
             )
 
+            val lastHistoryItemIndex = appDatabase.investmentHistoryDao().getAll().count() - 1
+
             appDatabase.investmentHistoryDao().insert(historyEntity)
 
-            localStorage.saveInt(LocalStorage.INVESTMENT_HISTORY_SELECTED_INDEX, appDatabase.investmentHistoryDao().getAll().count() - 1)
+            localStorage.saveInt(
+                LocalStorage.INVESTMENT_HISTORY_SELECTED_INDEX,
+                lastHistoryItemIndex + 1
+            )
 
             callback()
         }

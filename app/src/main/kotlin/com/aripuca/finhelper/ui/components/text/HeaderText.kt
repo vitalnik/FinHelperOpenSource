@@ -28,7 +28,7 @@ fun HeaderText(text: String) {
 
 @Preview(showBackground = true)
 @Composable
-private fun HeaderTextPreview(text: String) {
+private fun HeaderTextPreview() {
     FinHelperTheme {
         HeaderText(text = "Header Text")
     }

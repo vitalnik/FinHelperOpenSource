@@ -24,7 +24,10 @@ import com.aripuca.finhelper.ui.components.layout.VerticalSpacer
 data class HistoryPanelState(
     val selectedHistoryItemIndex: Int = 0,
     val historyItemCount: Int = 0,
-    val saveHistoryItemEnabled: Boolean = false,
+    val saveHistoryItemEnabled: Boolean = false
+)
+
+data class HistoryPanelEvents(
     val onAddHistoryItem: () -> Unit = {},
     val onSaveHistoryItem: () -> Unit = {},
     val onDeleteHistoryItem: () -> Unit = {},
@@ -32,45 +35,39 @@ data class HistoryPanelState(
     val onLoadNextHistoryItem: () -> Unit = {},
 )
 
-@Preview
 @Composable
 fun HistoryPanel(
-    selectedHistoryItemIndex: Int = 0,
-    historyItemCount: Int = 0,
-    saveEnabled: Boolean = false,
-    onAddClick: () -> Unit = {},
-    onSaveClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {},
-    onPrevClick: () -> Unit = {},
-    onNextClick: () -> Unit = {}
+    state: HistoryPanelState,
+    events: HistoryPanelEvents
 ) {
-
-    VerticalSpacer(14.dp)
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp)
             .border(
                 border = BorderStroke(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outline
                 ),
-                shape = RoundedCornerShape(4.dp)
+                shape = RoundedCornerShape(16.dp)
             )
             .padding(horizontal = 16.dp, vertical = 0.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
 
-        Text(text = "History")
+        Text(
+            text = "History",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
-        if (historyItemCount > 0) {
+        if (state.historyItemCount > 0) {
 
             Spacer(modifier = Modifier.weight(1.0f))
 
             IconButton(
-                onClick = { onPrevClick() },
-                enabled = historyItemCount > 1
+                onClick = { events.onLoadPrevHistoryItem() },
+                enabled = state.historyItemCount > 1
             ) {
                 Icon(
                     painter = painterResource(
@@ -82,11 +79,11 @@ fun HistoryPanel(
                 )
             }
 
-            Text(text = "${selectedHistoryItemIndex + 1}/${historyItemCount}")
+            Text(text = "${state.selectedHistoryItemIndex + 1}/${state.historyItemCount}")
 
             IconButton(
-                onClick = { onNextClick() },
-                enabled = historyItemCount > 1
+                onClick = { events.onLoadNextHistoryItem() },
+                enabled = state.historyItemCount > 1
             ) {
                 Icon(
                     painter = painterResource(
@@ -102,7 +99,7 @@ fun HistoryPanel(
         Spacer(modifier = Modifier.weight(1.0f))
 
         IconButton(
-            onClick = { onAddClick() }
+            onClick = { events.onAddHistoryItem() }
         ) {
             Icon(
                 painter = painterResource(
@@ -115,8 +112,8 @@ fun HistoryPanel(
         }
 
         IconButton(
-            onClick = { onSaveClick() },
-            enabled = saveEnabled && historyItemCount > 0,
+            onClick = { events.onSaveHistoryItem() },
+            enabled = state.saveHistoryItemEnabled && state.historyItemCount > 0,
         ) {
             Icon(
                 painter = painterResource(
@@ -129,8 +126,8 @@ fun HistoryPanel(
         }
 
         IconButton(
-            onClick = { onDeleteClick() },
-            enabled = historyItemCount > 0
+            onClick = { events.onDeleteHistoryItem() },
+            enabled = state.historyItemCount > 0
         ) {
             Icon(
                 painter = painterResource(
@@ -149,9 +146,12 @@ fun HistoryPanel(
 @Composable
 fun HistoryPanelPreview() {
     HistoryPanel(
-        selectedHistoryItemIndex = 3,
-        historyItemCount = 5,
-        saveEnabled = false,
+        state = HistoryPanelState(
+            selectedHistoryItemIndex = 3,
+            historyItemCount = 5,
+            saveHistoryItemEnabled = false
+        ),
+        events = HistoryPanelEvents()
     )
 }
 
@@ -159,8 +159,11 @@ fun HistoryPanelPreview() {
 @Composable
 fun HistoryPanelPreview2() {
     HistoryPanel(
-        selectedHistoryItemIndex = 0,
-        historyItemCount = 0,
-        saveEnabled = true,
+        state = HistoryPanelState(
+            selectedHistoryItemIndex = 0,
+            historyItemCount = 0,
+            saveHistoryItemEnabled = true
+        ),
+        events = HistoryPanelEvents()
     )
 }

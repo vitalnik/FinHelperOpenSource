@@ -1,19 +1,36 @@
 package com.aripuca.finhelper.ui.screens.my1stmillion
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,22 +42,29 @@ import com.aripuca.finhelper.ui.components.AdMobView
 import com.aripuca.finhelper.ui.components.buttons.NavigationIcon
 import com.aripuca.finhelper.ui.components.input.DropDownList
 import com.aripuca.finhelper.ui.components.input.OptionItem
-import com.aripuca.finhelper.ui.components.layout.*
+import com.aripuca.finhelper.ui.components.layout.HorizontalSpacer
+import com.aripuca.finhelper.ui.components.layout.LabelColumn
+import com.aripuca.finhelper.ui.components.layout.ScrollableColumn
+import com.aripuca.finhelper.ui.components.layout.VerticalSpacer
+import com.aripuca.finhelper.ui.components.input.TextFieldRow
+import com.aripuca.finhelper.ui.components.layout.Centered
 import com.aripuca.finhelper.ui.screens.investment.Frequency
 import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getText2
-import com.aripuca.finhelper.ui.theme.*
+import com.aripuca.finhelper.ui.theme.FinHelperTheme
+import com.aripuca.finhelper.ui.theme.interestDark
+import com.aripuca.finhelper.ui.theme.interestLight
+import com.aripuca.finhelper.ui.theme.principalDark
+import com.aripuca.finhelper.ui.theme.principalLight
+import com.aripuca.finhelper.ui.theme.totalDark
+import com.aripuca.finhelper.ui.theme.totalLight
 import com.himanshoe.charty.pie.PieChart
 import com.himanshoe.charty.pie.config.PieConfig
 import com.himanshoe.charty.pie.config.PieData
-import java.util.*
-import com.aripuca.finhelper.ui.components.buttons.IconButton
-import com.aripuca.finhelper.ui.components.text.TextLink
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun My1stMillionScreen(
     adsRemoved: Boolean,
-    totalValue: String,
     totalInterestEarned: String,
     totalInvestment: String,
     initialPrincipalAmount: String,
@@ -106,23 +130,17 @@ fun My1stMillionScreen(
                     yearsToGrow = yearsToGrow
                 )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 32.dp, bottom = 16.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                VerticalSpacer(32.dp)
 
-                    TextLink(text = "Open in Investments", fontSize = 18.sp) {
+                Centered {
+                    Button(onClick = {
                         onOpenInInvestments()
+                    }) {
+                        Text(text = "Open in Investments")
                     }
-//                    IconButton(
-//                        text = "Open in Investments",
-//                        iconId = R.drawable.ic_diamond
-//                    ) {
-//                        onOpenInInvestments()
-//                    }
                 }
+
+                VerticalSpacer(16.dp)
             }
 
             if (!adsRemoved && !BuildConfig.DEBUG) {
@@ -333,35 +351,12 @@ private fun InputFields(
     }
 }
 
-@Composable
-private fun RowScope.TextFieldRow(
-    label: String,
-    value: String,
-    onValueChanged: (String) -> Unit,
-    enabled: Boolean = true,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = {
-            onValueChanged(it)
-        },
-        modifier = Modifier.weight(1f, true),
-        label = { Text(text = label) },
-        enabled = enabled,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number,
-        ),
-        singleLine = true,
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     FinHelperTheme {
         My1stMillionScreen(
             adsRemoved = false,
-            totalValue = "$ 1,000,000.00",
             totalInterestEarned = "$ 250,000.00",
             totalInvestment = "$ 750,000.00",
             initialPrincipalAmount = "$ 1,000.00",
