@@ -6,6 +6,7 @@ data class MortgageScreenEvents(
     val onNumberOfYearsChanged: (String) -> Unit = {},
     val onPaymentsPerYearChanged: (String) -> Unit = {},
     val onAffordabilityClicked: () -> Unit = {},
+    val onPaymentScheduleClicked: () -> Unit = {},
     val onHelpClick: () -> Unit = {},
     val onBackPress: () -> Unit = {}
 )

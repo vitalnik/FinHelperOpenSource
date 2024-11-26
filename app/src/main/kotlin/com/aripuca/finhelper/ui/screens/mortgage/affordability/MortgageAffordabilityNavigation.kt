@@ -1,28 +1,26 @@
 package com.aripuca.finhelper.ui.screens.mortgage.affordability
 
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.aripuca.finhelper.ui.screens.mortgage.MortgageViewModel
+import com.aripuca.finhelper.MortgageAffordabilityScreenRoute
 
 fun NavGraphBuilder.mortgageAffordabilityScreen(
-    nav: NavController,
-    navigateToMortgage: () -> Unit = {},
+    nav: NavController
 ) {
-    composable("mortgage_affordability_screen") {
+    composable<MortgageAffordabilityScreenRoute> {
 
         //val keyboardController = LocalSoftwareKeyboardController.current
         val focusManager = LocalFocusManager.current
 
         val viewModel = hiltViewModel<MortgageAffordabilityViewModel>()
 
-        val calculationResult by viewModel.calculationResult.collectAsState()
+        val calculationResult by viewModel.calculationResult.collectAsStateWithLifecycle()
 
         val monthlyIncome by viewModel.monthlyIncome
         val monthlyDebtPayment by viewModel.monthlyDebtPayment

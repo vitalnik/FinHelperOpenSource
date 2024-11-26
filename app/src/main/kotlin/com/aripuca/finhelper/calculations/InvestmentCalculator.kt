@@ -11,76 +11,79 @@ data class YearlyTableItem(
     val totalValue: Double,
 )
 
+data class InvestmentCalculationParams(
+    val initialPrincipalBalance: Double,
+    val regularAddition: Double,
+    val regularAdditionFrequency: Double,
+    val interestRate: Double,
+    val numberOfTimesInterestApplied: Double,
+    val yearsToGrow: Int
+)
+
 data class InvestmentResults(
-    var totalValue: Double = 0.0,
-    var totalInterestEarned: Double = 0.0,
-    var totalInvestment: Double = 0.0,
-    var principalPercent: Double = 0.0,
-    var yearlyTable: MutableList<YearlyTableItem> = mutableListOf()
+    val totalValue: Double = 0.0,
+    val totalInterestEarned: Double = 0.0,
+    val totalInvestment: Double = 0.0,
+    val principalPercent: Double = 0.0,
+    val yearlyTable: List<YearlyTableItem> = listOf()
 )
 
 class InvestmentCalculator @Inject constructor() {
 
-    private var totalValue: Double = 0.0
-    private var totalInterestEarned: Double = 0.0
-    private var totalInvestment: Double = 0.0
-    private var principalPercent: Double = 0.0
-    private var yearlyTable: MutableList<YearlyTableItem> = mutableListOf()
-
     fun calculate(
-        initialPrincipalBalance: Double,
-        regularAddition: Double,
-        regularAdditionFrequency: Double,
-        interestRate: Double,
-        numberOfTimesInterestApplied: Double,
-        yearsToGrow: Int,
-    ):InvestmentResults {
+        calculationParams: InvestmentCalculationParams
+    ): InvestmentResults {
 
-        if (numberOfTimesInterestApplied == 0.0 || interestRate == 0.0 || yearsToGrow == 0) {
-            return InvestmentResults()
+        var totalValue: Double = 0.0
+        var totalInterestEarned: Double = 0.0
+        var totalInvestment: Double = 0.0
+        var principalPercent: Double = 0.0
+        var yearlyTable: List<YearlyTableItem> = listOf()
+
+        with(calculationParams) {
+
+            val nt = numberOfTimesInterestApplied * yearsToGrow
+            val r = interestRate / 100
+            val rDivByN = r / numberOfTimesInterestApplied
+
+            if (interestRate > 0.0) {
+
+                val principalBalance = initialPrincipalBalance
+
+                totalValue = 0.0
+
+                totalValue =
+                    principalBalance * (1 + rDivByN).pow(nt) +
+                            regularAddition * (regularAdditionFrequency / numberOfTimesInterestApplied) *
+                            ((1 + rDivByN).pow(nt) - 1) / rDivByN
+
+                totalInterestEarned =
+                    totalValue - initialPrincipalBalance - regularAddition * regularAdditionFrequency * yearsToGrow
+
+                totalInvestment =
+                    initialPrincipalBalance + regularAddition * regularAdditionFrequency * yearsToGrow
+
+                yearlyTable = populateYearlyTable(
+                    initialPrincipalBalance,
+                    regularAddition,
+                    regularAdditionFrequency,
+                    interestRate,
+                    numberOfTimesInterestApplied,
+                    yearsToGrow,
+                )
+            } else {
+                totalValue = initialPrincipalBalance * (1 + rDivByN).pow(nt)
+                totalInvestment = initialPrincipalBalance
+                totalInterestEarned = totalValue - initialPrincipalBalance
+                yearlyTable = emptyList()
+            }
+
+            principalPercent = if (totalValue > 0) {
+                totalInvestment * 100.0 / totalValue
+            } else {
+                0.0
+            }
         }
-
-        val nt = numberOfTimesInterestApplied * yearsToGrow
-        val r = interestRate / 100
-        val rDivByN = r / numberOfTimesInterestApplied
-
-        if (regularAddition > 0) {
-
-            val principalBalance = initialPrincipalBalance
-
-            totalValue = 0.0
-
-            totalValue =
-                principalBalance * (1 + rDivByN).pow(nt) +
-                        regularAddition * (regularAdditionFrequency / numberOfTimesInterestApplied) *
-                        ((1 + rDivByN).pow(nt) - 1) / rDivByN
-
-            totalInterestEarned =
-                totalValue - initialPrincipalBalance - regularAddition * regularAdditionFrequency * yearsToGrow
-
-            totalInvestment =
-                initialPrincipalBalance + regularAddition * regularAdditionFrequency * yearsToGrow
-
-        } else {
-            totalValue = initialPrincipalBalance * (1 + rDivByN).pow(nt)
-            totalInvestment = initialPrincipalBalance
-            totalInterestEarned = totalValue - initialPrincipalBalance
-        }
-
-        principalPercent = if (totalValue > 0) {
-            totalInvestment * 100.0 / totalValue
-        } else {
-            0.0
-        }
-
-        populateYearlyTable(
-            initialPrincipalBalance,
-            regularAddition,
-            regularAdditionFrequency,
-            interestRate,
-            numberOfTimesInterestApplied,
-            yearsToGrow,
-        )
 
         return InvestmentResults(
             totalValue = totalValue,
@@ -89,7 +92,6 @@ class InvestmentCalculator @Inject constructor() {
             principalPercent = principalPercent,
             yearlyTable = yearlyTable
         )
-
     }
 
     private fun populateYearlyTable(
@@ -99,9 +101,9 @@ class InvestmentCalculator @Inject constructor() {
         interestRate: Double,
         numberOfTimesInterestApplied: Double,
         yearsToGrow: Int,
-    ) {
+    ): List<YearlyTableItem> {
 
-        yearlyTable.clear()
+        var yearlyTable: MutableList<YearlyTableItem> = mutableListOf()
 
         val nt = numberOfTimesInterestApplied
         val rn = interestRate / 100 / numberOfTimesInterestApplied
@@ -139,6 +141,8 @@ class InvestmentCalculator @Inject constructor() {
             totalInvestment += regularAddition * regularAdditionFrequency
             yearlyInvestment = regularAddition * regularAdditionFrequency
         }
+
+        return yearlyTable
     }
 
 }

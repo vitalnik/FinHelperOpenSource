@@ -2,7 +2,6 @@ package com.aripuca.finhelper.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import com.aripuca.finhelper.services.analytics.AnalyticsClient
-import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -12,7 +11,7 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     fun logScreenView() {
-        analyticsClient.log(FirebaseAnalyticsClient.HOME_SCREEN_VIEW)
+        analyticsClient.log(AnalyticsClient.HOME_SCREEN_VIEW)
     }
 
 }

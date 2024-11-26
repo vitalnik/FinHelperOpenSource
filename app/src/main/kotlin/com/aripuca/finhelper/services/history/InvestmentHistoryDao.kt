@@ -13,11 +13,17 @@ interface InvestmentHistoryDao {
     @Query("SELECT * FROM investment_history ORDER BY title ASC")
     suspend fun getAll(): List<InvestmentHistoryEntity>
 
+    @Query("SELECT COUNT(id) FROM investment_history")
+    suspend fun getCount(): Int
+
     @Query("SELECT * FROM investment_history ORDER BY title ASC")
     fun getAllAsFlow(): Flow<List<InvestmentHistoryEntity>>
 
     @Query("SELECT * FROM investment_history WHERE id = :id")
-    fun getById(id: Int): Flow<InvestmentHistoryEntity>
+    suspend fun getById(id: Int): InvestmentHistoryEntity
+
+    @Query("SELECT * FROM investment_history WHERE id = :id")
+    fun getByIdAsFlow(id: Int): Flow<InvestmentHistoryEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(word: InvestmentHistoryEntity)

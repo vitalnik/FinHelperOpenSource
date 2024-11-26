@@ -1,15 +1,17 @@
 package com.aripuca.finhelper.ui.screens.my1stmillion
 
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.aripuca.finhelper.InvestmentScreenRoute
 import com.aripuca.finhelper.MainViewModel
+import com.aripuca.finhelper.My1stMillionScreenRoute
 import com.aripuca.finhelper.services.billing.checkPurchases
 import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getFrequency
 
@@ -18,11 +20,11 @@ fun NavGraphBuilder.my1stMillionScreen(
     mainViewModel: MainViewModel,
 ) {
 
-    composable("my1st_million_screen") {
+    composable<My1stMillionScreenRoute> {
 
         val viewModel = hiltViewModel<My1stMillionViewModel>()
 
-        val purchasesList by mainViewModel.purchasesFlow.collectAsState()
+        val purchasesList by mainViewModel.purchasesFlow.collectAsStateWithLifecycle()
 
         val adsRemoved by remember {
             derivedStateOf {
@@ -70,7 +72,7 @@ fun NavGraphBuilder.my1stMillionScreen(
             },
             onOpenInInvestments = {
                 viewModel.openInInvestments {
-                    nav.navigate("investment_screen")
+                    nav.navigate(InvestmentScreenRoute)
                 }
             },
             onBackPress = {

@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.aripuca.finhelper.ui.theme.*
 
 @Composable
-fun InterestProgress(principalPercent: Float) {
+fun InterestProgress(principalPercent: Double) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,7 +42,7 @@ fun InterestProgress(principalPercent: Float) {
                         ), color = if (isSystemInDarkTheme()) progress1Dark else progress1Light
                     )
                     .height(24.dp)
-                    .weight(principalPercent, true)
+                    .weight(principalPercent.toFloat(), true)
             )
         }
         if (principalPercent < 100f) {
@@ -58,7 +58,7 @@ fun InterestProgress(principalPercent: Float) {
                         color = if (isSystemInDarkTheme()) progress2Dark else progress2Light
                     )
                     .height(24.dp)
-                    .weight(100f - principalPercent, true)
+                    .weight(100f - principalPercent.toFloat(), true)
             )
         }
     }
@@ -68,6 +68,6 @@ fun InterestProgress(principalPercent: Float) {
 @Composable
 fun InterestProgressPreview() {
     FinHelperTheme {
-        InterestProgress(50.0f)
+        InterestProgress(50.0)
     }
 }

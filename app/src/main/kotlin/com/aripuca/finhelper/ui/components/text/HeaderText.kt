@@ -19,8 +19,8 @@ fun HeaderText(text: String) {
         text = text,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-        ,
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
         style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
         textAlign = TextAlign.Center,
     )

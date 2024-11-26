@@ -1,6 +1,5 @@
 package com.aripuca.finhelper.ui.screens.mortgage.affordability
 
-import LocalDimensions
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -53,6 +52,7 @@ import com.aripuca.finhelper.ui.components.layout.ScrollableColumn
 import com.aripuca.finhelper.ui.components.layout.VerticalSpacer
 import com.aripuca.finhelper.ui.components.text.AnimatedNumberText
 import com.aripuca.finhelper.ui.theme.FinHelperTheme
+import com.aripuca.finhelper.ui.theme.LocalDimensions
 import com.aripuca.finhelper.ui.theme.loanAmountDark
 import com.aripuca.finhelper.ui.theme.loanAmountLight
 import com.aripuca.finhelper.ui.theme.monthlyPaymentDark
@@ -182,6 +182,8 @@ fun MortgageAffordabilityScreen(
                     ) {
                         Text(text = stringResource(id = R.string.open_in_mortgage_calculator))
                     }
+
+                    VerticalSpacer()
                 }
             }
         }

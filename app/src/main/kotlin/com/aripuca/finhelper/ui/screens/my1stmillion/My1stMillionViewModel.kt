@@ -11,7 +11,6 @@ import com.aripuca.finhelper.extensions.toCurrency
 import com.aripuca.finhelper.extensions.toIsoString
 import com.aripuca.finhelper.services.LocalStorage
 import com.aripuca.finhelper.services.analytics.AnalyticsClient
-import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
 import com.aripuca.finhelper.services.history.AppDatabase
 import com.aripuca.finhelper.services.history.InvestmentHistoryEntity
 import com.aripuca.finhelper.ui.screens.investment.Frequency
@@ -49,7 +48,7 @@ class My1stMillionViewModel @Inject constructor(
     val yearsToGrow = mutableStateOf("100")
 
     fun logScreenView() {
-        analyticsClient.log(FirebaseAnalyticsClient.MY1ST_MILLION_SCREEN_VIEW)
+        analyticsClient.log(AnalyticsClient.MY1ST_MILLION_SCREEN_VIEW)
     }
 
     fun calculateInvestment() {
@@ -133,7 +132,7 @@ class My1stMillionViewModel @Inject constructor(
 
     fun openInInvestments(callback: () -> Unit = {}) {
 
-        analyticsClient.log(FirebaseAnalyticsClient.MY1ST_MILLION_OPEN_IN_INVESTMENTS_CLICK)
+        analyticsClient.log(AnalyticsClient.MY1ST_MILLION_OPEN_IN_INVESTMENTS_CLICK)
 
         viewModelScope.launch {
             val historyEntity = InvestmentHistoryEntity(

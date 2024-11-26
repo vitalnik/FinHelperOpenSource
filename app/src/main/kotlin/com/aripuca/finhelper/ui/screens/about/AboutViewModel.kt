@@ -1,33 +1,33 @@
 package com.aripuca.finhelper.ui.screens.about
 
 import androidx.lifecycle.ViewModel
-import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
+import com.aripuca.finhelper.services.analytics.AnalyticsClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class AboutViewModel @Inject constructor(
-    private val analyticsClient: FirebaseAnalyticsClient,
+    private val analyticsClient: AnalyticsClient,
 ) : ViewModel() {
 
     fun logScreenView() {
-        analyticsClient.log(FirebaseAnalyticsClient.ABOUT_SCREEN_VIEW)
+        analyticsClient.log(AnalyticsClient.ABOUT_SCREEN_VIEW)
     }
 
     fun logSupportEmailClick() {
-        analyticsClient.log(FirebaseAnalyticsClient.ABOUT_SCREEN_SUPPORT_EMAIL_CLICK)
+        analyticsClient.log(AnalyticsClient.ABOUT_SCREEN_SUPPORT_EMAIL_CLICK)
     }
 
     fun logGitHubLinkClick() {
-        analyticsClient.log(FirebaseAnalyticsClient.ABOUT_SCREEN_GITHUB_LINK_CLICK)
+        analyticsClient.log(AnalyticsClient.ABOUT_SCREEN_GITHUB_LINK_CLICK)
     }
 
     fun logRemoveAdsPurchaseStart() {
-        analyticsClient.log(FirebaseAnalyticsClient.REMOVE_ADS_PURCHASE_START)
+        analyticsClient.log(AnalyticsClient.REMOVE_ADS_PURCHASE_START)
     }
 
     fun logBuyMeCoffeePurchaseStart() {
-        analyticsClient.log(FirebaseAnalyticsClient.BUY_ME_COFFEE_PURCHASE_START)
+        analyticsClient.log(AnalyticsClient.BUY_ME_COFFEE_PURCHASE_START)
     }
 
 

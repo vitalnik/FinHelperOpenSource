@@ -15,7 +15,6 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
 import com.aripuca.finhelper.services.analytics.AnalyticsClient
-import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +51,6 @@ fun List<Purchase?>.checkBuyMeCoffeePurchase(): Boolean =
 
 fun Int.getResponseCodeString(): String =
     when (this) {
-        BillingClient.BillingResponseCode.SERVICE_TIMEOUT -> "SERVICE_TIMEOUT"
         BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED -> "FEATURE_NOT_SUPPORTED"
         BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "SERVICE_DISCONNECTED"
         BillingClient.BillingResponseCode.OK -> "OK"
@@ -101,7 +99,7 @@ class BillingManager @Inject constructor(
                 }
             } else {
                 analyticsClient.log(
-                    FirebaseAnalyticsClient.INAPP_PURCHASE_ERROR,
+                    AnalyticsClient.INAPP_PURCHASE_ERROR,
                     mapOf("responseCode" to billingResult.responseCode.getResponseCodeString())
                 )
             }
@@ -117,7 +115,7 @@ class BillingManager @Inject constructor(
         connectionRetryCount++
 
         analyticsClient.log(
-            FirebaseAnalyticsClient.BILLING_SERVICE_CONNECTION_START,
+            AnalyticsClient.BILLING_SERVICE_CONNECTION_START,
             mapOf("connectionRetryCount" to connectionRetryCount.toString())
         )
 
@@ -126,7 +124,7 @@ class BillingManager @Inject constructor(
                 connectionRetryCount = 0
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     analyticsClient.log(
-                        FirebaseAnalyticsClient.BILLING_SERVICE_CONNECTED
+                        AnalyticsClient.BILLING_SERVICE_CONNECTED
                     )
                     launch(context = Dispatchers.IO) {
                         queryPurchases()
@@ -138,7 +136,7 @@ class BillingManager @Inject constructor(
                         ">>> onBillingSetupFinished: " + billingResult.responseCode.getResponseCodeString()
                     )
                     analyticsClient.log(
-                        FirebaseAnalyticsClient.BILLING_SERVICE_CONNECTION_ERROR,
+                        AnalyticsClient.BILLING_SERVICE_CONNECTION_ERROR,
                         mapOf("responseCode" to billingResult.responseCode.getResponseCodeString())
                     )
                 }
@@ -147,7 +145,7 @@ class BillingManager @Inject constructor(
             override fun onBillingServiceDisconnected() {
 
                 analyticsClient.log(
-                    FirebaseAnalyticsClient.BILLING_SERVICE_DISCONNECTED,
+                    AnalyticsClient.BILLING_SERVICE_DISCONNECTED,
                     mapOf("connectionRetryCount" to connectionRetryCount.toString())
                 )
 
@@ -157,7 +155,7 @@ class BillingManager @Inject constructor(
                     Log.d("TAG", ">>> Billing client connection retry: $connectionRetryCount")
                     startConnection()
                 } else {
-                    analyticsClient.log(FirebaseAnalyticsClient.BILLING_SERVICE_CONNECTION_UNAVAILABLE)
+                    analyticsClient.log(AnalyticsClient.BILLING_SERVICE_CONNECTION_UNAVAILABLE)
                 }
             }
         })
@@ -218,9 +216,9 @@ class BillingManager @Inject constructor(
     private fun logInAppPurchaseSuccess(productId: String) {
         when (productId) {
             REMOVE_ADS_INAPP_PRODUCT ->
-                analyticsClient.log(FirebaseAnalyticsClient.REMOVE_ADS_PURCHASE_SUCCESS)
+                analyticsClient.log(AnalyticsClient.REMOVE_ADS_PURCHASE_SUCCESS)
             BUY_ME_COFFEE_INAPP_PRODUCT ->
-                analyticsClient.log(FirebaseAnalyticsClient.BUY_ME_COFFEE_PURCHASE_SUCCESS)
+                analyticsClient.log(AnalyticsClient.BUY_ME_COFFEE_PURCHASE_SUCCESS)
         }
     }
 

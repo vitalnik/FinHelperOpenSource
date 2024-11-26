@@ -39,6 +39,7 @@ import com.aripuca.finhelper.R
 import com.aripuca.finhelper.extensions.fromCurrencyToDouble
 import com.aripuca.finhelper.extensions.toCurrency
 import com.aripuca.finhelper.ui.components.AdMobView
+import com.aripuca.finhelper.ui.components.buttons.CenteredButton
 import com.aripuca.finhelper.ui.components.buttons.NavigationIcon
 import com.aripuca.finhelper.ui.components.input.DropDownList
 import com.aripuca.finhelper.ui.components.input.OptionItem
@@ -132,12 +133,8 @@ fun My1stMillionScreen(
 
                 VerticalSpacer(32.dp)
 
-                Centered {
-                    Button(onClick = {
-                        onOpenInInvestments()
-                    }) {
-                        Text(text = "Open in Investments")
-                    }
+                CenteredButton(text = stringResource(R.string.open_in_investments)) {
+                    onOpenInInvestments()
                 }
 
                 VerticalSpacer(16.dp)
@@ -232,7 +229,7 @@ private fun GoalChart(totalInvestment: Double, totalInterestEarned: Double, year
             HorizontalSpacer()
 
             LabelColumn(
-                label = stringResource(id = R.string.total_interest),
+                label = stringResource(id = R.string.interest_earned),
                 value = totalInterestEarned.toCurrency(),
                 color = if (isSystemInDarkTheme()) interestDark else interestLight,
                 horizontalAlignment = Alignment.End

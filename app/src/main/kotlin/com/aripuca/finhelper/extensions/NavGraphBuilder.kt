@@ -5,10 +5,11 @@ import androidx.compose.animation.core.tween
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.navigation
+import kotlin.reflect.KClass
 
 fun NavGraphBuilder.navigationFlow(
-    startDestination: String,
-    route: String,
+    startDestination: Any,
+    route: KClass<*>,
     builder: NavGraphBuilder.() -> Unit,
 ) = navigation(
     startDestination = startDestination,

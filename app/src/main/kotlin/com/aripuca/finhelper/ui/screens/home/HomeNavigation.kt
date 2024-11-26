@@ -7,6 +7,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.aripuca.finhelper.AboutScreenRoute
+import com.aripuca.finhelper.HomeScreenRoute
+import com.aripuca.finhelper.InvestmentScreenRoute
+import com.aripuca.finhelper.MortgageScreenRoute
 import com.aripuca.finhelper.R
 import com.aripuca.finhelper.extensions.getVersionName
 
@@ -14,7 +18,7 @@ fun NavGraphBuilder.homeScreen(
     navController: NavHostController,
     navigateToMy1stMillionScreen: () -> Unit = {}
 ) {
-    composable(route = "home_screen") {
+    composable<HomeScreenRoute> {
 
         val homeViewModel = hiltViewModel<HomeViewModel>()
 
@@ -28,17 +32,17 @@ fun NavGraphBuilder.homeScreen(
         HomeScreen(
             versionName = versionName,
             navigateToMortgage = {
-                navController.navigate("mortgage_screen")
+                navController.navigate(MortgageScreenRoute)
             },
             navigateToInvestment = {
-                navController.navigate("investment_screen")
+                navController.navigate(InvestmentScreenRoute)
             },
             navigateToMy1stMillion = {
                 navigateToMy1stMillionScreen()
                 //navController.navigate("my1st_million_screen")
             },
             navigateToAbout = {
-                navController.navigate("about_screen")
+                navController.navigate(AboutScreenRoute)
             }
         )
     }

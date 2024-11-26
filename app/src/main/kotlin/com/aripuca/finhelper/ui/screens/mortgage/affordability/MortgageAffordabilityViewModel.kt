@@ -12,7 +12,6 @@ import com.aripuca.finhelper.calculations.MortgageAffordabilityCalculator
 import com.aripuca.finhelper.extensions.toIsoString
 import com.aripuca.finhelper.services.LocalStorage
 import com.aripuca.finhelper.services.analytics.AnalyticsClient
-import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
 import com.aripuca.finhelper.services.history.AppDatabase
 import com.aripuca.finhelper.services.history.MortgageHistoryEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,7 +51,7 @@ class MortgageAffordabilityViewModel @Inject constructor(
     val canCalculate = mutableStateOf(true)
 
     fun logScreenView() {
-        analyticsClient.log(FirebaseAnalyticsClient.AFFORDABILITY_SCREEN_VIEW)
+        analyticsClient.log(AnalyticsClient.AFFORDABILITY_SCREEN_VIEW)
     }
 
     fun updateMonthlyIncome(value: String) {
@@ -89,7 +88,7 @@ class MortgageAffordabilityViewModel @Inject constructor(
 
         calculated = true
 
-        analyticsClient.log(FirebaseAnalyticsClient.AFFORDABILITY_CALCULATE_CLICK)
+        analyticsClient.log(AnalyticsClient.AFFORDABILITY_CALCULATE_CLICK)
 
         validateInput()
         saveInputInLocalStorage()
@@ -141,7 +140,7 @@ class MortgageAffordabilityViewModel @Inject constructor(
 
     fun openInMortgage(callback: () -> Unit = {}) {
 
-        analyticsClient.log(FirebaseAnalyticsClient.AFFORDABILITY_OPEN_IN_MORTGAGE_CLICK)
+        analyticsClient.log(AnalyticsClient.AFFORDABILITY_OPEN_IN_MORTGAGE_CLICK)
 
         viewModelScope.launch {
             val historyEntity = MortgageHistoryEntity(

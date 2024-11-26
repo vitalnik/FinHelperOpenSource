@@ -19,7 +19,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.aripuca.finhelper.R
-import com.aripuca.finhelper.ui.components.layout.VerticalSpacer
 
 data class HistoryPanelState(
     val selectedHistoryItemIndex: Int = 0,

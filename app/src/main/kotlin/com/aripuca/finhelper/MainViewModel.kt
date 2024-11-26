@@ -4,7 +4,6 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import com.android.billingclient.api.BillingFlowParams
 import com.aripuca.finhelper.services.analytics.AnalyticsClient
-import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient.Companion.INTERSTITIAL_AD_SHOWN
 import com.aripuca.finhelper.services.billing.BillingManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -24,7 +23,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun logInterstitialAdShown(screen: String) {
-        analyticsClient.log(INTERSTITIAL_AD_SHOWN, mapOf("SCREEN" to screen))
+        analyticsClient.log(AnalyticsClient.INTERSTITIAL_AD_SHOWN, mapOf("SCREEN" to screen))
     }
 
     fun isTestDevice():Boolean = analyticsClient.isTestDevice

@@ -19,8 +19,5 @@ fun Context.launchEmail(emailAddress: String, subject: String, body: String = ""
     intent.putExtra(Intent.EXTRA_SUBJECT, subject)
     intent.putExtra(Intent.EXTRA_TEXT, body)
 
-    try {
-        ContextCompat.startActivity(this, intent, Bundle())
-    } catch (ex: Exception) {
-    }
+    startActivity(intent, Bundle())
 }

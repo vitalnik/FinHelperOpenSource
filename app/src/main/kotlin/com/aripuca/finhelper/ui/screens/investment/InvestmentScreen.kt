@@ -2,22 +2,48 @@ package com.aripuca.finhelper.ui.screens.investment
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,55 +52,63 @@ import com.aripuca.finhelper.R
 import com.aripuca.finhelper.calculations.YearlyTableItem
 import com.aripuca.finhelper.extensions.toCurrency
 import com.aripuca.finhelper.ui.components.AdMobView
+import com.aripuca.finhelper.ui.components.buttons.CenteredButton
 import com.aripuca.finhelper.ui.components.buttons.NavigationIcon
 import com.aripuca.finhelper.ui.components.charts.InterestProgress
 import com.aripuca.finhelper.ui.components.input.DropDownList
 import com.aripuca.finhelper.ui.components.input.OptionItem
-import com.aripuca.finhelper.ui.components.layout.*
+import com.aripuca.finhelper.ui.components.input.TextFieldRow
+import com.aripuca.finhelper.ui.components.layout.HorizontalSpacer
+import com.aripuca.finhelper.ui.components.layout.LabelRow
+import com.aripuca.finhelper.ui.components.layout.TableCellFixed
+import com.aripuca.finhelper.ui.components.layout.TableHeaderCellFixed
+import com.aripuca.finhelper.ui.components.layout.VerticalSpacer
 import com.aripuca.finhelper.ui.components.text.HeaderText
 import com.aripuca.finhelper.ui.screens.common.HistoryPanel
 import com.aripuca.finhelper.ui.screens.common.HistoryPanelEvents
 import com.aripuca.finhelper.ui.screens.common.HistoryPanelState
-import com.aripuca.finhelper.ui.components.input.TextFieldRow
 import com.aripuca.finhelper.ui.screens.common.TopAppBarRow
+import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getFrequency
 import com.aripuca.finhelper.ui.screens.investment.Frequency.Companion.getText
-import com.aripuca.finhelper.ui.theme.*
+import com.aripuca.finhelper.ui.theme.FinHelperTheme
+import com.aripuca.finhelper.ui.theme.bottomSheetPickHeight
+import com.aripuca.finhelper.ui.theme.interestDark
+import com.aripuca.finhelper.ui.theme.interestLight
+import com.aripuca.finhelper.ui.theme.principalDark
+import com.aripuca.finhelper.ui.theme.principalLight
+import com.aripuca.finhelper.ui.theme.totalDark
+import com.aripuca.finhelper.ui.theme.totalLight
 import com.himanshoe.charty.bar.StackedBarChart
 import com.himanshoe.charty.bar.config.BarConfigDefaults
 import com.himanshoe.charty.bar.model.StackedBarData
 import com.himanshoe.charty.common.axis.AxisConfigDefaults
-
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun InvestmentScreen(
-    adsRemoved: Boolean,
-    inputValid: Boolean,
-    totalValue: String,
-    totalInterestEarned: String,
-    totalInvestment: String,
-    principalPercent: Float,
-    principalAmount: String,
-    onPrincipalAmountChanged: (String) -> Unit = {},
-    regularAddition: String,
-    onRegularAdditionChanged: (String) -> Unit = {},
-    interestRate: String,
-    onInterestRateChanged: (String) -> Unit = {},
-    yearsToGrow: String,
-    onYearsToGrowChanged: (String) -> Unit = {},
-    regularAdditionFrequency: Frequency,
-    onRegularAdditionFrequencyChanged: (Frequency) -> Unit = {},
-    yearlyTable: List<YearlyTableItem> = listOf(),
-    onHelpClick: () -> Unit = {},
-    onBackPress: () -> Unit = {},
+    screenState: InvestmentScreenState,
+    screenEvents: InvestmentScreenEvents,
     historyPanelState: HistoryPanelState,
     historyPanelEvents: HistoryPanelEvents,
 ) {
 
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(
+            initialValue = SheetValue.Hidden,
+            skipHiddenState = false
+        )
+    )
+
+    LaunchedEffect(key1 = true) {
+        scaffoldState.bottomSheetState.hide()
+    }
+
+    BottomSheetScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
@@ -82,17 +116,29 @@ fun InvestmentScreen(
                     TopAppBarRow(
                         title = stringResource(id = R.string.investment_calculator),
                         helpContentDescription = stringResource(R.string.investment_help),
-                        onHelpClick = onHelpClick
+                        onHelpClick = screenEvents.onHelpClick
                     )
                 },
                 navigationIcon = {
                     NavigationIcon {
-                        onBackPress()
+                        screenEvents.onBackPress()
                     }
                 },
                 scrollBehavior = scrollBehavior
             )
-        }) { scaffoldPadding ->
+        },
+        sheetContent = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(fraction = 0.9f),
+            ) {
+                YearlyTable(screenState.calculatedFields.yearlyTable)
+            }
+        },
+        scaffoldState = scaffoldState,
+        sheetPeekHeight = bottomSheetPickHeight,
+    ) { scaffoldPadding ->
 
         Column(
             modifier = Modifier
@@ -100,22 +146,13 @@ fun InvestmentScreen(
                 .padding(top = scaffoldPadding.calculateTopPadding())
         ) {
 
-            val horScrollState = rememberScrollState()
             LazyColumn(state = listState, modifier = Modifier.weight(1f, true)) {
 
                 item {
                     VerticalSpacer()
                     InputFields(
-                        principalAmount,
-                        onPrincipalAmountChanged,
-                        interestRate,
-                        onInterestRateChanged,
-                        yearsToGrow,
-                        onYearsToGrowChanged,
-                        regularAddition,
-                        onRegularAdditionChanged,
-                        regularAdditionFrequency,
-                        onRegularAdditionFrequencyChanged
+                        state = screenState.inputFields,
+                        events = screenEvents.toInputFieldEvents()
                     )
                 }
 
@@ -128,56 +165,28 @@ fun InvestmentScreen(
                 }
 
                 item {
-                    AnimatedVisibility(visible = inputValid) {
-                        InvestmentChart(yearlyTable)
-                    }
+                    InvestmentChart(screenState.calculatedFields.yearlyTable)
                 }
 
-                stickyHeader {
-                    if (inputValid) {
+                item {
+                    with(screenState.calculatedFields) {
                         CalculatedFields(
                             totalInvestment,
                             totalInterestEarned,
                             totalValue,
                             principalPercent
                         )
-                        Surface {
-                            Column {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                ) {
-                                    HeaderText(text = stringResource(id = R.string.yearly_table))
-                                }
-                                YearlyTableHeader(horScrollState)
+                    }
+
+                    if (!scaffoldState.bottomSheetState.isVisible) {
+                        VerticalSpacer()
+                        CenteredButton(text = stringResource(id = R.string.yearly_table)) {
+                            screenEvents.onYearlyTableClicked()
+                            scope.launch {
+                                scaffoldState.bottomSheetState.expand()
                             }
                         }
-                    }
-                }
-
-                if (inputValid) {
-                    itemsIndexed(items = yearlyTable) { index, item ->
-
-                        var backgroundColor = Color.Transparent
-                        if ((index + 1) % 2 == 0) {
-                            backgroundColor = if (isSystemInDarkTheme()) Color.LightGray.copy(
-                                alpha = 0.1f
-                            ) else Color.LightGray.copy(alpha = 0.25f)
-                        }
-                        Row(
-                            modifier = Modifier
-                                .horizontalScroll(horScrollState)
-                                .padding(horizontal = 16.dp)
-                                .background(color = backgroundColor)
-                                .padding(vertical = 4.dp)
-                        ) {
-                            TableCellFixed(text = (index + 1).toString(), width = 50.dp)
-                            TableCellFixed(text = item.yearlyInvestment.toCurrency())
-                            TableCellFixed(text = item.totalInvestment.toCurrency())
-                            TableCellFixed(text = item.yearlyInterest.toCurrency())
-                            TableCellFixed(text = item.totalInterest.toCurrency())
-                            TableCellFixed(text = item.totalValue.toCurrency())
-                        }
+                        VerticalSpacer()
                     }
                 }
 
@@ -186,7 +195,7 @@ fun InvestmentScreen(
                 }
             }
 
-            if (!adsRemoved && !BuildConfig.DEBUG) {
+            if (!screenState.adsRemoved && !BuildConfig.DEBUG) {
                 AdMobView(adUnitId = stringResource(id = R.string.investment_screen_banner_ad_unit_id))
             }
         }
@@ -206,16 +215,14 @@ private fun InvestmentChart(yearlyTable: List<YearlyTableItem>) {
         stackBarData.add(StackedBarData(xValue = index + 1, yValue = yValue))
     }
 
-    if (stackBarData.isEmpty()) {
-        return
-    }
-
     Column {
 
         VerticalSpacer()
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("investment_chart_title"),
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
@@ -230,7 +237,7 @@ private fun InvestmentChart(yearlyTable: List<YearlyTableItem>) {
                 style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
             )
             Text(
-                text = stringResource(id = R.string.interest),
+                text = stringResource(id = R.string.earned_interest),
                 modifier = Modifier,
                 color = if (isSystemInDarkTheme()) interestDark else interestLight,
                 style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
@@ -239,21 +246,39 @@ private fun InvestmentChart(yearlyTable: List<YearlyTableItem>) {
 
         VerticalSpacer(8.dp)
 
-        StackedBarChart(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
-            colors = listOf(
-                if (isSystemInDarkTheme()) principalDark else principalLight,
-                if (isSystemInDarkTheme()) interestDark else interestLight,
-            ),
-            stackBarData = stackBarData,
-            axisConfig = AxisConfigDefaults.axisConfigDefaults2(
-                isSystemInDarkTheme()
-            ),
-            barConfig = BarConfigDefaults.barConfigDimesDefaults(),
-        )
+                .height(200.dp), contentAlignment = Alignment.Center
+        ) {
+            if (stackBarData.isNotEmpty()) {
+                StackedBarChart(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+                    colors = listOf(
+                        if (isSystemInDarkTheme()) principalDark else principalLight,
+                        if (isSystemInDarkTheme()) interestDark else interestLight,
+                    ),
+                    stackBarData = stackBarData,
+                    axisConfig = AxisConfigDefaults.axisConfigDefaults2(
+                        isSystemInDarkTheme()
+                    ),
+                    barConfig = BarConfigDefaults.barConfigDimesDefaults(),
+                )
+            } else {
+                Text(
+                    text = stringResource(id = R.string.not_enough_data),
+                    color = if (isSystemInDarkTheme()) principalDark else principalLight,
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    ),
+                )
+            }
+        }
     }
 }
 
@@ -262,7 +287,7 @@ private fun CalculatedFields(
     totalInvestment: String,
     totalInterestEarned: String,
     totalValue: String,
-    principalPercent: Float
+    principalPercent: Double
 ) {
     Surface {
         Column(
@@ -281,35 +306,26 @@ private fun CalculatedFields(
                 value = totalInvestment,
                 color = if (isSystemInDarkTheme()) principalDark else principalLight
             )
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             LabelRow(
-                label = stringResource(id = R.string.total_interest),
+                label = stringResource(id = R.string.interest_earned),
                 value = totalInterestEarned,
                 color = if (isSystemInDarkTheme()) interestDark else interestLight
             )
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             LabelRow(
                 label = stringResource(id = R.string.total_value),
                 value = totalValue,
                 color = if (isSystemInDarkTheme()) totalDark else totalLight
             )
-            VerticalSpacer()
         }
     }
 }
 
 @Composable
 private fun InputFields(
-    principalAmount: String,
-    onPrincipalAmountChanged: (String) -> Unit,
-    interestRate: String,
-    onInterestRateChanged: (String) -> Unit,
-    yearsToGrow: String,
-    onYearsToGrowChanged: (String) -> Unit,
-    regularAddition: String,
-    onRegularAdditionChanged: (String) -> Unit,
-    regularAdditionFrequency: Frequency,
-    onRegularAdditionFrequencyChanged: (Frequency) -> Unit
+    state: InvestmentInputFields,
+    events: InputFieldsEvents,
 ) {
     Row(
         modifier = Modifier
@@ -318,14 +334,14 @@ private fun InputFields(
     ) {
         TextFieldRow(
             label = stringResource(id = R.string.initial_investment),
-            value = principalAmount,
-            onValueChanged = onPrincipalAmountChanged,
+            value = state.initialInvestmentInput,
+            onValueChanged = events.onPrincipalAmountChanged,
         )
         HorizontalSpacer()
         TextFieldRow(
             label = stringResource(R.string.interest_rate),
-            value = interestRate,
-            onValueChanged = onInterestRateChanged,
+            value = state.interestRateInput,
+            onValueChanged = events.onInterestRateChanged,
         )
     }
 
@@ -338,14 +354,14 @@ private fun InputFields(
     ) {
         TextFieldRow(
             label = stringResource(id = R.string.number_of_years),
-            value = yearsToGrow,
-            onValueChanged = onYearsToGrowChanged,
+            value = state.yearsToGrowInput,
+            onValueChanged = events.onYearsToGrowChanged,
         )
         HorizontalSpacer()
         TextFieldRow(
             label = stringResource(id = R.string.regular_contribution),
-            value = regularAddition,
-            onValueChanged = onRegularAdditionChanged,
+            value = state.regularContributionInput,
+            onValueChanged = events.onRegularAdditionChanged,
         )
     }
 
@@ -367,12 +383,12 @@ private fun InputFields(
         DropDownList(
             label = stringResource(id = R.string.contribution_and_compounding_frequency),
             selectedOption = OptionItem(
-                regularAdditionFrequency.getText(),
-                regularAdditionFrequency
+                state.regularAdditionFrequencyInput.getFrequency().getText(),
+                state.regularAdditionFrequencyInput.getFrequency()
             ),
             options = optionItems
         ) {
-            onRegularAdditionFrequencyChanged(it.value)
+            events.onRegularAdditionFrequencyChanged(it.value)
         }
     }
 }
@@ -401,8 +417,52 @@ private fun YearlyTableHeader(scrollState: ScrollState) {
         TableHeaderCellFixed(stringResource(R.string.yearly_investment))
         TableHeaderCellFixed(stringResource(R.string.total_investment))
         TableHeaderCellFixed(stringResource(R.string.yearly_interest))
-        TableHeaderCellFixed(stringResource(R.string.total_interest))
+        TableHeaderCellFixed(stringResource(R.string.interest_earned))
         TableHeaderCellFixed(stringResource(R.string.total_value))
+    }
+}
+
+@Composable
+private fun YearlyTable(
+    yearlyTable: List<YearlyTableItem>
+) {
+    val horScrollState = rememberScrollState()
+
+    HeaderText(text = stringResource(R.string.yearly_table))
+    YearlyTableHeader(horScrollState)
+
+    LazyColumn(
+        state = rememberLazyListState(),
+    ) {
+
+        itemsIndexed(items = yearlyTable, key = { index, _ ->
+            index
+        }) { index, item ->
+
+            var backgroundColor = Color.Transparent
+            if ((index + 1) % 2 == 0) {
+                backgroundColor = if (isSystemInDarkTheme()) Color.LightGray.copy(
+                    alpha = 0.1f
+                ) else Color.LightGray.copy(alpha = 0.25f)
+            }
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(horScrollState)
+                    .padding(horizontal = 16.dp)
+                    .background(color = backgroundColor)
+                    .padding(vertical = 4.dp)
+            ) {
+                TableCellFixed(text = (index + 1).toString(), width = 50.dp)
+                TableCellFixed(text = item.yearlyInvestment.toCurrency())
+                TableCellFixed(text = item.totalInvestment.toCurrency())
+                TableCellFixed(text = item.yearlyInterest.toCurrency())
+                TableCellFixed(text = item.totalInterest.toCurrency())
+                TableCellFixed(text = item.totalValue.toCurrency())
+            }
+        }
+        item {
+            VerticalSpacer(height = 32.dp)
+        }
     }
 }
 
@@ -411,18 +471,12 @@ private fun YearlyTableHeader(scrollState: ScrollState) {
 fun HomeScreenPreview() {
     FinHelperTheme {
         InvestmentScreen(
-            adsRemoved = false,
-            inputValid = true,
-            totalValue = "",
-            totalInterestEarned = "",
-            totalInvestment = "",
-            principalPercent = 50f,
-            principalAmount = "",
-            regularAddition = "",
-            interestRate = "",
-            yearsToGrow = "",
-            regularAdditionFrequency = Frequency.MONTHLY,
-            yearlyTable = listOf(),
+            screenState = InvestmentScreenState(
+                inputFields = InvestmentInputFields(),
+                calculatedFields = InvestmentCalculatedFields(),
+                adsRemoved = false,
+            ),
+            screenEvents = InvestmentScreenEvents(),
             historyPanelState = HistoryPanelState(),
             historyPanelEvents = HistoryPanelEvents()
         )

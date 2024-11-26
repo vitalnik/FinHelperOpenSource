@@ -1,6 +1,5 @@
 package com.aripuca.finhelper.ui.theme
 
-import LocalDimensions
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*

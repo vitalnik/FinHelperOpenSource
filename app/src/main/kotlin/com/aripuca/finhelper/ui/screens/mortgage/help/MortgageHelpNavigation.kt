@@ -5,11 +5,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.aripuca.finhelper.MortgageHelpScreenRoute
+import com.aripuca.finhelper.MortgageScreenRoute
 
 fun NavGraphBuilder.mortgageHelpScreen(
     nav: NavController
 ) {
-    composable("mortgage_help_screen") {
+    composable<MortgageHelpScreenRoute> {
 
         val viewModel = hiltViewModel<MortgageHelpViewModel>()
 

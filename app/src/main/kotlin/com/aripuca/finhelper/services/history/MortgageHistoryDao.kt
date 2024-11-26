@@ -13,6 +13,9 @@ interface MortgageHistoryDao {
     @Query("SELECT * FROM mortgage_history ORDER BY title ASC")
     fun getAllAsFlow(): Flow<List<MortgageHistoryEntity>>
 
+    @Query("SELECT COUNT(id) FROM mortgage_history")
+    suspend fun getCount(): Int
+
     @Query("SELECT * FROM mortgage_history ORDER BY title ASC")
     suspend fun getAll(): List<MortgageHistoryEntity>
 

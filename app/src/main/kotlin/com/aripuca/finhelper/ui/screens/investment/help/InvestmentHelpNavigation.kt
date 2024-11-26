@@ -5,12 +5,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.aripuca.finhelper.InvestmentHelpScreenRoute
 
 fun NavGraphBuilder.investmentHelpScreen(
     nav: NavController
 ) {
 
-    composable("investment_help_screen") {
+    composable<InvestmentHelpScreenRoute> {
 
         val viewModel = hiltViewModel<InvestmentHelpViewModel>()
 

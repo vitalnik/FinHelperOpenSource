@@ -10,13 +10,20 @@ data class ScheduleItem(
     val loanRemainder: Double
 )
 
+data class MortgageCalculationParams(
+    val loanAmount: Double,
+    val interestRate: Double,
+    val numberOfYears: Int,
+    val paymentsPerYear: Int,
+)
+
 data class MortgageCalculationResults(
-    var totalInterest: Double = 0.0,
-    var totalPayments: Double = 0.0,
-    var paymentPerPeriod: Double = 0.0,
-    var principalPercent: Double = 0.0,
-    var paymentsSchedule: MutableList<ScheduleItem> = mutableListOf(),
-    var yearSummary: MutableList<ScheduleItem> = mutableListOf(),
+    val totalInterest: Double = 0.0,
+    val totalPayments: Double = 0.0,
+    val paymentPerPeriod: Double = 0.0,
+    val principalPercent: Double = 0.0,
+    val paymentsSchedule: List<ScheduleItem> = listOf(),
+    val yearSummary: List<ScheduleItem> = listOf(),
 )
 
 class MortgageCalculator @Inject constructor() {
@@ -42,81 +49,80 @@ class MortgageCalculator @Inject constructor() {
     }
 
     fun calculate(
-        loanAmount: Double,
-        interestRate: Double,
-        numberOfYears: Int,
-        paymentsPerYear: Int,
+        calculationParams: MortgageCalculationParams
     ): MortgageCalculationResults {
 
-        if (loanAmount == 0.0 || interestRate == 0.0 || numberOfYears == 0 || paymentsPerYear == 0) {
-            return MortgageCalculationResults()
-        }
+        with(calculationParams) {
+            if (loanAmount == 0.0 || interestRate == 0.0 || numberOfYears == 0 || paymentsPerYear == 0) {
+                return MortgageCalculationResults()
+            }
 
-        var totalInterest = 0.0
-        var totalPayments = 0.0
-        var principalPercent = 0.0
-        var paymentPerPeriod = 0.0
-        val paymentsSchedule = mutableListOf<ScheduleItem>()
-        val yearSummary = mutableListOf<ScheduleItem>()
+            var totalInterest = 0.0
+            var totalPayments = 0.0
+            var principalPercent = 0.0
+            var paymentPerPeriod = 0.0
+            val paymentsSchedule = mutableListOf<ScheduleItem>()
+            val yearSummary = mutableListOf<ScheduleItem>()
 
-        val periodInterestRate = interestRate / 100 / paymentsPerYear
-        var loanRemainder = loanAmount
-        val numberOfPayments = paymentsPerYear * numberOfYears
+            val periodInterestRate = interestRate / 100 / paymentsPerYear
+            var loanRemainder = loanAmount
+            val numberOfPayments = paymentsPerYear * numberOfYears
 
-        var yearInterest = 0.0
-        var yearPrincipal = 0.0
+            var yearInterest = 0.0
+            var yearPrincipal = 0.0
 
-        paymentPerPeriod = calculatePaymentPerPeriod(
-            loanAmount = loanAmount,
-            interestRate = interestRate,
-            numberOfYears = numberOfYears,
-            paymentsPerYear = paymentsPerYear,
-        )
-
-        repeat(numberOfPayments) { paymentIndex ->
-            val interestPart = loanRemainder * periodInterestRate
-            val principalPart = paymentPerPeriod - interestPart
-            loanRemainder -= principalPart
-            totalInterest += interestPart
-            paymentsSchedule.add(
-                ScheduleItem(
-                    principalPart = principalPart,
-                    interestPart = interestPart,
-                    loanRemainder = abs(loanRemainder)
-                )
+            paymentPerPeriod = calculatePaymentPerPeriod(
+                loanAmount = loanAmount,
+                interestRate = interestRate,
+                numberOfYears = numberOfYears,
+                paymentsPerYear = paymentsPerYear,
             )
 
-            yearInterest += interestPart
-            yearPrincipal += principalPart
-
-            if ((paymentIndex + 1) % paymentsPerYear == 0) {
-                yearSummary.add(
+            repeat(numberOfPayments) { paymentIndex ->
+                val interestPart = loanRemainder * periodInterestRate
+                val principalPart = paymentPerPeriod - interestPart
+                loanRemainder -= principalPart
+                totalInterest += interestPart
+                paymentsSchedule.add(
                     ScheduleItem(
-                        principalPart = yearPrincipal,
-                        interestPart = yearInterest,
-                        loanRemainder = loanRemainder
+                        principalPart = principalPart,
+                        interestPart = interestPart,
+                        loanRemainder = abs(loanRemainder)
                     )
                 )
-                yearInterest = 0.0
-                yearPrincipal = 0.0
+
+                yearInterest += interestPart
+                yearPrincipal += principalPart
+
+                if ((paymentIndex + 1) % paymentsPerYear == 0) {
+                    yearSummary.add(
+                        ScheduleItem(
+                            principalPart = yearPrincipal,
+                            interestPart = yearInterest,
+                            loanRemainder = loanRemainder
+                        )
+                    )
+                    yearInterest = 0.0
+                    yearPrincipal = 0.0
+                }
             }
+
+            totalPayments = loanAmount + totalInterest
+
+            principalPercent = if (totalPayments > 0) {
+                loanAmount * 100.0 / totalPayments
+            } else {
+                0.0
+            }
+
+            return MortgageCalculationResults(
+                totalInterest = totalInterest,
+                totalPayments = totalPayments,
+                paymentPerPeriod = paymentPerPeriod,
+                principalPercent = principalPercent,
+                paymentsSchedule = paymentsSchedule,
+                yearSummary = yearSummary,
+            )
         }
-
-        totalPayments = loanAmount + totalInterest
-
-        principalPercent = if (totalPayments > 0) {
-            loanAmount * 100.0 / totalPayments
-        } else {
-            0.0
-        }
-
-        return MortgageCalculationResults(
-            totalInterest = totalInterest,
-            totalPayments = totalPayments,
-            paymentPerPeriod = paymentPerPeriod,
-            principalPercent = principalPercent,
-            paymentsSchedule = paymentsSchedule,
-            yearSummary = yearSummary,
-        )
     }
 }

@@ -2,7 +2,6 @@ package com.aripuca.finhelper
 
 import android.app.Application
 import com.aripuca.finhelper.services.analytics.AnalyticsClient
-import com.aripuca.finhelper.services.analytics.FirebaseAnalyticsClient
 import com.aripuca.finhelper.services.billing.BillingManager
 import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.HiltAndroidApp
@@ -20,7 +19,7 @@ class App: Application() {
     override fun onCreate() {
         super.onCreate()
 
-        analyticsClient.log(FirebaseAnalyticsClient.APP_START)
+        analyticsClient.log(AnalyticsClient.APP_START)
 
         MobileAds.initialize(this)
 

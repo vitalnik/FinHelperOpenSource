@@ -1,7 +1,6 @@
 package com.aripuca.finhelper.ui.screens.about
 
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
@@ -15,8 +14,10 @@ import com.aripuca.finhelper.extensions.getVersionName
 import com.aripuca.finhelper.services.billing.checkBuyMeCoffeePurchase
 import com.aripuca.finhelper.services.billing.checkRemoveAdsPurchase
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.composable
 import com.android.billingclient.api.ProductDetails
+import com.aripuca.finhelper.AboutScreenRoute
 
 fun NavGraphBuilder.aboutScreen(
     nav: NavController,
@@ -26,7 +27,7 @@ fun NavGraphBuilder.aboutScreen(
     launchPurchaseFlow: (ProductDetails) -> Unit
 ) {
 
-    composable("about_screen") {
+    composable<AboutScreenRoute> {
 
         val viewModel = hiltViewModel<AboutViewModel>()
         //  val homeViewModel =
@@ -35,8 +36,8 @@ fun NavGraphBuilder.aboutScreen(
         val context = LocalContext.current
         val versionName = stringResource(id = R.string.ver) + " " + context.getVersionName()
 
-        val productDetailsList by mainViewModel.productDetailsFlow.collectAsState()
-        val purchasesList by mainViewModel.purchasesFlow.collectAsState()
+        val productDetailsList by mainViewModel.productDetailsFlow.collectAsStateWithLifecycle()
+        val purchasesList by mainViewModel.purchasesFlow.collectAsStateWithLifecycle()
 
         val removeAdsPurchased by remember {
             derivedStateOf {
